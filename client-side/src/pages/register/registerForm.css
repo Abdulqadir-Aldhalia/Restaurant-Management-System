@@ -1,0 +1,136 @@
+/* Global Styles */
+
+h2 {
+  font-size: 28px;
+  color: #e63946;
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-family: "Roboto", sans-serif;
+}
+
+p {
+  margin-bottom: 10px;
+}
+
+/* Input Group Styles */
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color: #ff5f6d;
+  outline: none;
+}
+
+/* Checkbox Group Styles */
+
+.checkbox-group {
+  margin-bottom: 20px;
+}
+
+input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+/* Register Button Styles */
+
+.register-button {
+  background-color: #ff5f6d;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s;
+}
+
+.register-button:hover {
+  background-color: #ff4552;
+}
+
+/* Error Message Styles */
+
+.error-message {
+  color: #ff5f6d;
+  font-size: 14px;
+}
+
+/* Anchor Tag Styles */
+
+a {
+  color: #ff5f6d;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Container Styles */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Ensure the container takes full height of the viewport */
+  width: 100vw; /* Ensure it takes the full width of the viewport */
+  background-color: #f7f7f7; /* Light background for better contrast */
+  box-sizing: border-box; /* Ensure padding/margin does not affect centering */
+}
+
+/* Form Container Styles */
+
+.form-container {
+  display: flex;
+  background-color: white;
+  padding: 30px;
+  width: 60%;
+  max-width: 900px;
+  border-radius: 16px;
+  box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+/* Info Section and Register Section Styles */
+
+.info-section,
+.register-section {
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.info-section {
+  color: black;
+  font-family: "Roboto", sans-serif;
+  font-size: 20px;
+  border-radius: 24px;
+  padding: 20px;
+}
+
+/* Media Query for Large Screens */
+
+@media (min-width: 768px) {
+  .info-section,
+  .register-section {
+    width: 50%;
+  }
+}

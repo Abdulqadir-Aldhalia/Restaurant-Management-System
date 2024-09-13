@@ -1,0 +1,201 @@
+/* Reset default margins and paddings */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Header styling */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  box-shadow: 0 10px 20px -5px rgba(230, 57, 70, 0.2);
+  padding: 1rem 2rem; /* Increased padding for better spacing */
+  height: 10vh;
+}
+
+.header .logo {
+  color: #333; /* Changed to dark grey for better contrast */
+  font-size: 1.75rem; /* Slightly larger font size for better visibility */
+  font-weight: bold;
+}
+
+.header nav ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+}
+
+.header-items {
+  color: #333; /* Dark grey text for readability */
+  font-family: "Phantomsans", sans-serif; /* Match the font used for the login button */
+  font-size: 16px; /* Consistent with a modern look */
+  text-decoration: none; /* Remove default underline */
+  padding: 10px 15px; /* Adequate padding for clickable areas */
+  border-radius: 4px; /* Slightly rounded corners for a cohesive look */
+  text-align: center;
+  transition:
+    color 0.3s,
+    background-color 0.3s,
+    transform 0.3s; /* Smooth transitions for hover effects and scale */
+}
+
+/* Hover state */
+.header-items:hover {
+  color: #e63946; /* Match the gradient color for a unified theme */
+  text-decoration: none;
+  background-color: rgba(
+    230,
+    57,
+    70,
+    0.1
+  ); /* Light background that complements the gradient */
+  transform: scale(1.05); /* Slightly scale up on hover */
+}
+
+/* Active state */
+.header-items:active {
+  color: #ff7f50; /* Change text color when the link is active */
+  background-color: rgba(
+    255,
+    127,
+    80,
+    0.2
+  ); /* Slightly darker background for active state */
+  transform: scale(0.98); /* Slightly scale down on active */
+}
+
+.login {
+  /* Gradient Text Color */
+  background: linear-gradient(144deg, #e63946, #ff7f50);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Gradient Border */
+  border: 2px solid; /* Set border width and style */
+  border-image: linear-gradient(144deg, #e63946, #ff7f50) 1; /* Gradient border */
+
+  /* Font Styling */
+  font-family: Phantomsans, sans-serif;
+  font-size: 18px;
+  font-weight: bold; /* Make the font bold */
+
+  /* Other Styles */
+  border-radius: 6px;
+  box-shadow: rgba(230, 57, 70, 0.2) 0 10px 20px -5px; /* Red shadow */
+  color: transparent; /* Make sure text color is transparent so gradient shows up */
+  display: flex;
+  justify-content: center;
+  min-width: 120px;
+  padding: 12px 20px;
+  text-decoration: none; /* Avoid double declaration */
+  user-select: none;
+  cursor: pointer;
+  background-color: transparent; /* Ensure background is transparent */
+
+  /* Animation */
+  animation: pulseAnimation 1.5s infinite; /* Apply the animation */
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
+}
+
+/* Keyframes for Animation */
+@keyframes pulseAnimation {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Hero section styling */
+.hero {
+  background-color: #f0f2f5;
+  padding: 3rem 1rem;
+  text-align: center;
+  height: 30vh;
+  margin-bottom: 10vh;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.button {
+  background: linear-gradient(144deg, #e63946, #ff7f50);
+  border: none;
+  border-radius: 6px;
+  width: auto;
+  min-width: 120px;
+  padding: 12px 20px;
+  color: #ffffff;
+  font-family: "Phantomsans", sans-serif;
+  font-size: 18px;
+  text-decoration: none;
+  text-align: center;
+  user-select: none;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button:hover {
+  background: linear-gradient(144deg, #d62828, #ff7f50);
+  transform: scale(1.05);
+}
+
+.button:active {
+  background-color: #d62828;
+  transform: scale(0.98);
+}
+
+/* Features section styling */
+.features {
+  display: flex;
+  justify-content: space-around;
+  padding: 2rem 1rem;
+  background-color: #ffffff;
+  height: 30vh;
+  margin-bottom: auto;
+}
+
+.features .feature {
+  text-align: center;
+  max-width: 250px;
+}
+
+.feature h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Footer styling */
+.footer {
+  background: linear-gradient(144deg, #d62828, #ff7f50);
+  color: white;
+  text-align: center;
+  padding: 1rem;
+}

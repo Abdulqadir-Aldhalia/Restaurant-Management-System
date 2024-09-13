@@ -1,0 +1,17 @@
+.profile-image {
+  width: 150px !important; /* Adjust width as needed */
+  height: 150px !important; /* Adjust height as needed */
+  object-fit: cover !important;
+  border-radius: 50% !important; /* Ensure image is circular */
+  margin: 20px auto !important; /* Centers the image */
+  display: block !important;
+}
+
+.profile-image-upload-preview {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  margin-top: 10px;
+}

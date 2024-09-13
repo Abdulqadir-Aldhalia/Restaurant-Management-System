@@ -1,0 +1,33 @@
+/* Align the register text and link */
+.container-64 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+  background-color: #ffffff; /* Keep a light background for form readability */
+  border-radius: 16px;
+  box-shadow: rgba(230, 57, 70, 0.15) 0 10px 30px -5px; /* Softer red shadow */
+  border: 1px solid #e63946; /* Subtle red border to align with button theme */
+}
+
+.welcome-message-2 h2 {
+  font-size: 25px;
+  margin-left: 7%;
+  color: #e63946; /* Match with red-orange theme */
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-family: "Roboto", sans-serif;
+}
+
+.welcome-message-2 p {
+  font-size: 18px;
+  margin: auto;
+  color: #666;
+  font-weight: 400;
+  font-family: "Roboto", sans-serif;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}

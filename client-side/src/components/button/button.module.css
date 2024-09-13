@@ -1,0 +1,42 @@
+.button-64 {
+  align-items: center;
+  background-image: linear-gradient(
+    144deg,
+    #e63946,
+    #ff7f50
+  ); /* Red-Orange gradient */
+  border: none;
+  border-radius: 6px;
+  box-shadow: rgba(230, 57, 70, 0.2) 0 10px 20px -5px; /* Red shadow */
+  color: #ffffff;
+  display: flex;
+  font-family: Phantomsans, sans-serif;
+  font-size: 18px;
+  justify-content: center;
+  min-width: 120px;
+  padding: 12px 20px;
+  text-decoration: none;
+  user-select: none;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
+}
+
+.button-64:hover {
+  background-image: linear-gradient(
+    144deg,
+    #d62828,
+    #ff7f50
+  ); /* Richer red on hover */
+  transform: scale(1.05);
+}
+
+.button-64:active {
+  transform: scale(0.98);
+  background-color: #d62828; /* Deep red when pressed */
+}
+
+.button-64 span {
+  background-color: transparent;
+}
