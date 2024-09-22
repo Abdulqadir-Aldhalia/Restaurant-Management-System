@@ -117,6 +117,9 @@ func HashPassword(password string) (string, error) {
 }
 
 func ValidUUID(userId string) bool {
+	if userId == "" {
+		return false
+	}
 	uuidRegex := regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 	return uuidRegex.MatchString(userId)
 }
@@ -155,4 +158,20 @@ func ValidateUser(user model.User) error {
 	}
 
 	return nil
+}
+
+func isEmptyOrNil(values ...interface{}) bool {
+	for _, value := range values {
+		switch v := value.(type) {
+		case string:
+			if v == "" {
+				return true
+			}
+		default:
+			if v == nil {
+				return true
+			}
+		}
+	}
+	return false
 }

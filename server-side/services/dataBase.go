@@ -44,6 +44,25 @@ var (
 		"user_id",
 		"vendor_id",
 	}
+
+	item_columns = []string{
+		"id",
+		"name",
+		"price",
+		"vendor_id",
+		"img",
+		"created_at",
+		"updated_at",
+	}
+
+	table_columns = []string{
+		"id",
+		"vendor_id",
+		"name",
+		"is_available",
+		"customer_id",
+		"is_needing_service",
+	}
 )
 
 func SetDB(database *sqlx.DB) {

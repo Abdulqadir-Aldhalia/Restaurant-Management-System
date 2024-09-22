@@ -9,6 +9,7 @@ import {
   Form,
   Popconfirm,
   Spin,
+  Select,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -19,15 +20,17 @@ import { Switch } from "antd";
 
 function VendorManagement() {
   const [vendors, setVendors] = useState([]);
+  const [users, setUsers] = useState([]); // List of users to assign as admins
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState(false);
   const [editingVendor, setEditingVendor] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [currentAdmin, setCurrentAdmin] = useState(null); // Current admin of the vendor
   const [form] = Form.useForm();
   const [isAddingVendor, setIsAddingVendor] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState(null); // Selected admin for the vendor
 
   const userToken = useSelector((state) => state.user.userToken);
   const dispatch = useDispatch();
@@ -59,9 +62,7 @@ function VendorManagement() {
 
     const fetchVendors = async () => {
       try {
-        const response = await api.get("/vendors", {
-          headers: { Authorization: `Bearer ${userToken}` },
-        });
+        const response = await api.get("/vendors");
         if (isMounted) {
           setVendors(response.data);
           setLoading(false);
@@ -74,9 +75,18 @@ function VendorManagement() {
       }
     };
 
-    fetchVendors();
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get("/users");
+        setUsers(response.data);
+      } catch (error) {
+        message.error("Failed to load users");
+      }
+    };
 
-    // Cleanup function
+    fetchVendors();
+    fetchUsers();
+
     return () => {
       isMounted = false;
     };
@@ -114,20 +124,16 @@ function VendorManagement() {
       formData.append("name", values.name);
       formData.append("description", values.description);
 
-      // Append the image file if a new one is selected
       if (imageFile) {
         formData.append("img", imageFile);
       }
 
-      // Update the vendor data in the backend
       const response = await api.put(`/vendors/${editingVendor.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Get the updated vendor data from the response
       const updatedVendor = response.data;
 
-      // Update the vendor list locally with the new image or name/description
       setVendors(
         vendors.map((vendor) =>
           vendor.id === editingVendor.id
@@ -135,7 +141,6 @@ function VendorManagement() {
                 ...vendor,
                 name: updatedVendor.name,
                 description: updatedVendor.description,
-                // Set the updated image URL returned from the server
                 img: updatedVendor.img,
               }
             : vendor,
@@ -143,19 +148,18 @@ function VendorManagement() {
       );
 
       message.success("Vendor updated successfully");
-
-      // Reset modal state
       setIsModalVisible(false);
       setEditingVendor(null);
       form.resetFields();
-      setImageUrl(""); // Reset image URL
-      setImageFile(null); // Reset image file
+      setImageUrl("");
+      setImageFile(null);
     } catch (error) {
       message.error("Failed to update vendor");
     } finally {
       setLoadingAction(false);
     }
   };
+
   const handleEdit = (vendor) => {
     setEditingVendor(vendor);
     setImageUrl(`${baseUrl}${vendor.img}`);
@@ -165,6 +169,7 @@ function VendorManagement() {
     });
     setIsModalVisible(true);
     setIsAddingVendor(false);
+    setCurrentAdmin(vendor.currentAdmin);
   };
 
   const handleDeleteVendor = async (vendorId) => {
@@ -197,7 +202,6 @@ function VendorManagement() {
       await api.put(`/vendors/${vendorId}/subscription`, {
         status: isSubscribed ? "enable" : "disable",
       });
-      // Update the local state to reflect the change
       setVendors(
         vendors.map((vendor) =>
           vendor.id === vendorId ? { ...vendor, isSubscribed } : vendor,
@@ -208,6 +212,64 @@ function VendorManagement() {
       );
     } catch (error) {
       message.error("Failed to update subscription status");
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
+  const handleAssignAdmin = async () => {
+    if (!selectedAdmin) {
+      message.error("Please select a user to assign as admin.");
+      return;
+    }
+
+    setLoadingAction(true);
+    try {
+      const form = new FormData();
+      form.append("user_id", selectedAdmin);
+      form.append("vendor_id", editingVendor.id);
+      await api.post("/vendors/assign-vendor-admin", form);
+
+      // Update the local state with the new admin
+      setVendors(
+        vendors.map((vendor) =>
+          vendor.id === editingVendor.id
+            ? { ...vendor, currentAdmin: selectedAdmin }
+            : vendor,
+        ),
+      );
+      message.success("Admin assigned successfully");
+      setSelectedAdmin(null);
+    } catch (error) {
+      message.error("Failed to assign admin");
+    } finally {
+      setLoadingAction(false);
+    }
+  };
+
+  const handleRevokeAdmin = async (vendor) => {
+    if (!vendor.currentAdmin) {
+      message.error("No admin to revoke.");
+      return;
+    }
+
+    setLoadingAction(true);
+    const form = new FormData();
+    form.append("user_id", vendor.currentAdmin);
+    form.append("vendor_id", vendor.id); // Extract vendor.id correctly
+
+    try {
+      await api.post("/vendors/revoke-vendor-admin", form);
+
+      // Update the local state to remove the admin
+      setVendors(
+        vendors.map((v) =>
+          v.id === vendor.id ? { ...v, currentAdmin: null } : v,
+        ),
+      );
+      message.success("Admin revoked successfully");
+    } catch (error) {
+      message.error("Failed to revoke admin");
     } finally {
       setLoadingAction(false);
     }
@@ -246,7 +308,7 @@ function VendorManagement() {
                     <Button danger>Delete</Button>
                   </Popconfirm>,
                   <Switch
-                    checked={vendor.isSubscribed} // Use the subscription status here
+                    checked={vendor.isSubscribed}
                     onChange={(checked) =>
                       handleSubscriptionToggle(vendor.id, checked)
                     }
@@ -257,80 +319,110 @@ function VendorManagement() {
                   title={vendor.name}
                   description={vendor.description}
                 />
+                <p>
+                  Current Admin:{" "}
+                  {vendor.currentAdmin ? (
+                    <span>{vendor.currentAdmin}</span>
+                  ) : (
+                    <span>No admin assigned</span>
+                  )}
+                </p>
+                <Popconfirm
+                  title="Are you sure you want to revoke the current admin?"
+                  onConfirm={() => handleRevokeAdmin(vendor)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button disabled={!vendor.currentAdmin} danger>
+                    Revoke Admin
+                  </Button>
+                </Popconfirm>
               </Card>
             );
           })}
+
+          <Button
+            type="dashed"
+            style={{ width: 240, height: 240 }}
+            onClick={showAddVendorModal}
+          >
+            <PlusOutlined />
+            <br />
+            Add Vendor
+          </Button>
         </div>
       )}
 
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={showAddVendorModal}
-        style={{ marginTop: "20px" }}
-      >
-        Add Vendor
-      </Button>
-
       <Modal
-        title={editingVendor ? "Edit Vendor" : "Add Vendor"}
+        title={isAddingVendor ? "Add Vendor" : "Edit Vendor"}
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
-        footer={null}
+        onOk={() => {
+          isAddingVendor
+            ? form.submit()
+            : handleSaveVendor(form.getFieldsValue());
+        }}
+        okText={isAddingVendor ? "Add" : "Save"}
+        confirmLoading={loadingAction}
       >
-        <Form
-          form={form}
-          onFinish={isAddingVendor ? handleAddVendor : handleSaveVendor}
-          layout="vertical"
-        >
+        <Form form={form} layout="vertical" onFinish={handleAddVendor}>
           <Form.Item
-            name="name"
             label="Name"
-            rules={[{ required: true, message: "Please enter vendor name" }]}
+            name="name"
+            rules={[{ required: true, message: "Please input vendor name!" }]}
           >
             <Input />
           </Form.Item>
-
           <Form.Item
-            name="description"
             label="Description"
+            name="description"
             rules={[
-              { required: true, message: "Please enter vendor description" },
+              { required: true, message: "Please input vendor description!" },
             ]}
           >
-            <Input.TextArea />
+            <Input />
           </Form.Item>
-
-          <Form.Item label="Upload Image">
+          <Form.Item label="Image">
             <Upload
-              name="image"
-              showUploadList={false}
               beforeUpload={() => false}
               onChange={handleImageUpload}
+              showUploadList={false}
             >
               <Button icon={<PlusOutlined />}>Upload Image</Button>
             </Upload>
             {imageUrl && (
               <img
                 src={imageUrl}
-                alt="vendor"
-                style={{ width: 100, marginTop: 10 }}
+                alt="Vendor"
+                style={{ width: "100%", marginTop: 10 }}
               />
             )}
           </Form.Item>
 
-          <Form.Item label="Subscription">
-            <Switch
-              checked={editingVendor ? editingVendor.isSubscribed : false}
-              onChange={(checked) =>
-                form.setFieldsValue({ subscription: checked })
-              }
-            />
-          </Form.Item>
-
-          <Button type="primary" htmlType="submit" loading={loadingAction}>
-            {isAddingVendor ? "Add Vendor" : "Save Changes"}
-          </Button>
+          {!isAddingVendor && (
+            <>
+              <Form.Item label="Assign Admin">
+                <Select
+                  placeholder="Select an admin"
+                  onChange={(value) => setSelectedAdmin(value)}
+                  style={{ width: "100%" }}
+                >
+                  {users.map((user) => (
+                    <Select.Option key={user.id} value={user.id}>
+                      {user.name}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Button
+                onClick={handleAssignAdmin}
+                disabled={!selectedAdmin || loadingAction}
+                type="primary"
+              >
+                Assign Admin
+              </Button>
+            </>
+          )}
         </Form>
       </Modal>
     </div>

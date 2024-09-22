@@ -42,6 +42,7 @@ func Controllers() {
 
 		sub.With(services.AuthenticateJWT, services.Authorize("admin", "vendor")).Group(func(vendor *michi.Router) {
 			handleVendorAdminRoutes(vendor)
+			handelItemVendorRoutes(vendor)
 		})
 	})
 
@@ -57,6 +58,8 @@ func handleUserRoutes(sub *michi.Router) {
 	sub.HandleFunc("GET users", services.GetAllUsers)
 	sub.HandleFunc("GET users/{id}", services.GetUserById)
 	sub.HandleFunc("PUT users/{id}", services.UpdateUser)
+	sub.HandleFunc("GET items", services.GetAllItems)
+	sub.HandleFunc("GET items/{id}", services.GetItemById)
 }
 
 func handleVendorRoutes(sub *michi.Router) {
@@ -83,8 +86,14 @@ func handleVendorAdminRoutes(sub *michi.Router) {
 
 func handleAdminRoutes(sub *michi.Router) {
 	sub.HandleFunc("DELETE users/{id}", services.DeleteUser)
-	sub.HandleFunc("POST vendors/assign-vendor-admin", services.AssignAdminToVendor)
-	sub.HandleFunc("POST vendors/revoke-vendor-admin", services.RevokeAdminFromVendor)
+	sub.HandleFunc("POST vendors/assign-admin", services.AssignAdminToVendor)
+	sub.HandleFunc("POST vendors/revoke-admin", services.RevokeAdminFromVendor)
 	sub.HandleFunc("DELETE vendors", services.DeleteAllVendors)
 	sub.HandleFunc("DELETE vendors/{id}", services.DeleteVendorById)
+}
+
+func handelItemVendorRoutes(sub *michi.Router) {
+	sub.HandleFunc("POST items", services.CreateNewItem)
+	sub.HandleFunc("PUT items/{id}", services.UpdateItem)
+	sub.HandleFunc("DELETE items/{id}", services.DeleteItemById)
 }

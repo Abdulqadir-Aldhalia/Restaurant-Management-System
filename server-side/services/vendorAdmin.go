@@ -93,12 +93,13 @@ func AssignAdminToVendor(w http.ResponseWriter, r *http.Request) {
 	vendorId := r.FormValue("vendor_id")
 
 	if userId == "" || vendorId == "" {
-		HandelError(w, http.StatusBadRequest, "userId or roleId can't be empty!")
+		HandelError(w, http.StatusBadRequest, "userId or vendor_id can't be empty!")
 		return
 	}
 
 	user_id, err := uuid.Parse(userId)
 	if err != nil {
+		log.Print(user_id)
 		HandelError(w, http.StatusBadRequest, "Invalid UUID for user_id format")
 		log.Println(err)
 		return
@@ -106,6 +107,7 @@ func AssignAdminToVendor(w http.ResponseWriter, r *http.Request) {
 
 	vendor_id, err := uuid.Parse(vendorId)
 	if err != nil {
+		log.Print(vendorId)
 		HandelError(w, http.StatusBadRequest, "Invalid UUID vendor_id format")
 		log.Println(err)
 		return
