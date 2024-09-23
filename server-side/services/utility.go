@@ -21,6 +21,11 @@ var (
 	Domain          = os.Getenv("DOMAIN")
 	DOMAIN          = os.Getenv("Domain")
 	ImageExtensions = []string{".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}
+
+	sortOptions = map[string]string{
+		"asc":  "ASC",
+		"desc": "DESC",
+	}
 )
 
 func SendJsonResponse(w http.ResponseWriter, status int, data interface{}) {
@@ -160,7 +165,7 @@ func ValidateUser(user model.User) error {
 	return nil
 }
 
-func isEmptyOrNil(values ...interface{}) bool {
+func ValidateIsEmptyOrNil(values ...interface{}) bool {
 	for _, value := range values {
 		switch v := value.(type) {
 		case string:

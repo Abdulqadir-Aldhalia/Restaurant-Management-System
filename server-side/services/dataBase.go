@@ -61,7 +61,7 @@ var (
 		"name",
 		"is_available",
 		"customer_id",
-		"is_needing_service",
+		"is_needs_service",
 	}
 )
 

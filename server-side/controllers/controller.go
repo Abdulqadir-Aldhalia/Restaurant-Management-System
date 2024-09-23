@@ -55,15 +55,24 @@ func Controllers() {
 }
 
 func handleUserRoutes(sub *michi.Router) {
+	// users
 	sub.HandleFunc("GET users", services.GetAllUsers)
 	sub.HandleFunc("GET users/{id}", services.GetUserById)
 	sub.HandleFunc("PUT users/{id}", services.UpdateUser)
+
+	// vendors
+	sub.HandleFunc("GET vendors", services.GetVendors)
+
+	// items
 	sub.HandleFunc("GET items", services.GetAllItems)
 	sub.HandleFunc("GET items/{id}", services.GetItemById)
+
+	// tables
+	sub.HandleFunc("GET tables", services.GetTables)
 }
 
 func handleVendorRoutes(sub *michi.Router) {
-	sub.HandleFunc("GET vendors", services.GetAllVendors)
+	// sub.HandleFunc("GET vendors", services.GetAllVendors)
 	sub.HandleFunc("GET vendors/{id}", services.GetVendorById)
 	sub.HandleFunc("POST vendors", services.CreateNewVendor)
 	sub.HandleFunc("PUT vendors/{id}", services.UpdateVendor)
@@ -96,4 +105,6 @@ func handelItemVendorRoutes(sub *michi.Router) {
 	sub.HandleFunc("POST items", services.CreateNewItem)
 	sub.HandleFunc("PUT items/{id}", services.UpdateItem)
 	sub.HandleFunc("DELETE items/{id}", services.DeleteItemById)
+
+	sub.HandleFunc("POST tables", services.CreateNewTable)
 }

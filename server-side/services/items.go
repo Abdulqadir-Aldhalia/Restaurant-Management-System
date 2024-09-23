@@ -16,7 +16,7 @@ import (
 )
 
 func CreateNewItem(w http.ResponseWriter, r *http.Request) {
-	if isEmptyOrNil(r.FormValue("vendor_id"), r.FormValue("name"), r.FormValue("price")) {
+	if ValidateIsEmptyOrNil(r.FormValue("vendor_id"), r.FormValue("name"), r.FormValue("price")) {
 		HandelError(w, http.StatusBadGateway, "name or price can't be empty!")
 		return
 	}

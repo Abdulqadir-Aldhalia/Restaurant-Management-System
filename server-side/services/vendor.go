@@ -14,6 +14,116 @@ import (
 	"github.com/google/uuid"
 )
 
+func CreateNewVendor(w http.ResponseWriter, r *http.Request) {
+	vendor := model.Vendor{
+		ID:          uuid.New(),
+		Name:        r.FormValue("name"),
+		Description: r.FormValue("description"),
+	}
+
+	file, fileHeader, err := r.FormFile("img")
+
+	if err != nil && err != http.ErrMissingFile {
+		HandelError(w, http.StatusBadRequest, "Invalid file")
+		return
+	} else if err == nil {
+		defer file.Close()
+		imageName, err := SaveImageFile(file, "vendors", fileHeader.Filename)
+		if err != nil {
+			HandelError(w, http.StatusInternalServerError, "Error saving image")
+		}
+
+		vendor.Img = &imageName
+	}
+
+	query, args, err := statement.
+		Insert("vendors").
+		Columns("id", "img", "name", "description").
+		Values(vendor.ID, vendor.Img, vendor.Name, vendor.Description).
+		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(vendor_columns, ", "))).
+		ToSql()
+	if err != nil {
+		HandelError(w, http.StatusInternalServerError, "Error generate query")
+		return
+	}
+
+	if err := db.QueryRowx(query, args...).StructScan(&vendor); err != nil {
+		HandelError(w, http.StatusInternalServerError, "Error creating vendor: "+err.Error())
+		return
+	}
+
+	SendJsonResponse(w, http.StatusCreated, vendor)
+}
+
+func GetVendors(w http.ResponseWriter, r *http.Request) {
+	var vendors []model.Vendor
+
+	q := r.FormValue("query")
+	f := r.FormValue("filter")
+	s := r.FormValue("sort")
+
+	statementBuilder := statement.Select(strings.Join(vendor_columns, ", ")).From("vendors")
+
+	if q != "" {
+		statementBuilder = statementBuilder.Where("name ILIKE ?", "%"+q+"%")
+	}
+
+	if f != "" {
+		vendorId, err := uuid.Parse(f)
+		if err != nil {
+			log.Printf("invalid vendor uuid => %s", f)
+		} else {
+			query, args, err := statement.Select("id").
+				From("vendors").
+				Where("id = ?", vendorId).
+				ToSql()
+			if err != nil {
+				log.Println("error while creating query -> ", err)
+			}
+
+			result, err := db.Exec(query, args...)
+			if err != nil {
+				log.Println("Error: vendor query result -> ", result)
+				log.Println("Error: vendor query error -> ", err)
+			} else {
+				statementBuilder = statementBuilder.Where("id = ?", f)
+			}
+		}
+	}
+
+	if s != "" {
+		switch s {
+		case "-created_at":
+			statementBuilder = statementBuilder.OrderBy("created_at DESC")
+		case "created_at":
+			statementBuilder = statementBuilder.OrderBy("created_at ASC")
+		case "-name":
+			statementBuilder = statementBuilder.OrderBy("name DESC")
+		case "name":
+			statementBuilder = statementBuilder.OrderBy("name ASC")
+		}
+	} else if s == "" {
+		log.Println("No Sort option were passed")
+	} else {
+		log.Println("Invalid sort type => ", s)
+	}
+
+	query, args, err := statementBuilder.ToSql()
+	if err != nil {
+		log.Println("Error while building query -> ", err)
+		HandleError(w, http.StatusInternalServerError, "Error building query")
+		return
+	}
+
+	if err := db.Select(&vendors, query, args...); err != nil {
+		log.Println("Error while executing query -> ", err)
+		HandleError(w, http.StatusInternalServerError, "Error fetching vendors")
+		return
+	}
+
+	SendJsonResponse(w, http.StatusOK, vendors)
+}
+
 func GetAllVendors(w http.ResponseWriter, r *http.Request) {
 	var vendors []model.Vendor
 
@@ -65,47 +175,6 @@ func GetVendorById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendJsonResponse(w, http.StatusOK, vendor)
-}
-
-func CreateNewVendor(w http.ResponseWriter, r *http.Request) {
-	vendor := model.Vendor{
-		ID:          uuid.New(),
-		Name:        r.FormValue("name"),
-		Description: r.FormValue("description"),
-	}
-
-	file, fileHeader, err := r.FormFile("img")
-
-	if err != nil && err != http.ErrMissingFile {
-		HandelError(w, http.StatusBadRequest, "Invalid file")
-		return
-	} else if err == nil {
-		defer file.Close()
-		imageName, err := SaveImageFile(file, "vendors", fileHeader.Filename)
-		if err != nil {
-			HandelError(w, http.StatusInternalServerError, "Error saving image")
-		}
-
-		vendor.Img = &imageName
-	}
-
-	query, args, err := statement.
-		Insert("vendors").
-		Columns("id", "img", "name", "description").
-		Values(vendor.ID, vendor.Img, vendor.Name, vendor.Description).
-		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(vendor_columns, ", "))).
-		ToSql()
-	if err != nil {
-		HandelError(w, http.StatusInternalServerError, "Error generate query")
-		return
-	}
-
-	if err := db.QueryRowx(query, args...).StructScan(&vendor); err != nil {
-		HandelError(w, http.StatusInternalServerError, "Error creating vendor: "+err.Error())
-		return
-	}
-
-	SendJsonResponse(w, http.StatusCreated, vendor)
 }
 
 func UpdateVendor(w http.ResponseWriter, r *http.Request) {
