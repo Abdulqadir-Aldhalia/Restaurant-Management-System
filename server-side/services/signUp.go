@@ -38,7 +38,7 @@ func SignUpNewUser(w http.ResponseWriter, r *http.Request) {
 		ToSql()
 
 	if errEmail != nil {
-		HandleError(w, http.StatusInternalServerError, "Error generating query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error generating query")
 		return
 	}
 
@@ -85,7 +85,7 @@ func SignUpNewUser(w http.ResponseWriter, r *http.Request) {
 		ToSql()
 	err = db.Get(&usersCount, countQuery, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error counting users")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error counting users")
 		fmt.Printf("count = %d erro:%s", usersCount, err)
 		time.Sleep(2 * time.Second)
 		return

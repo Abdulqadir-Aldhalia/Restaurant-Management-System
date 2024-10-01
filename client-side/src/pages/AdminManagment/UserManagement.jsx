@@ -9,6 +9,7 @@ import {
   Form,
   Popconfirm,
   Spin,
+  Pagination,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -27,6 +28,11 @@ function UserManagement() {
   const [imageFile, setImageFile] = useState(null);
   const [form] = Form.useForm();
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
 
   const userToken = useSelector((state) => state.user.userToken);
   const dispatch = useDispatch();
@@ -53,20 +59,28 @@ function UserManagement() {
     },
   );
 
-  const loadInitialUsers = async () => {
+  const loadInitialUsers = async (page = 1) => {
+    setLoading(true);
     try {
-      const response = await api.get("/users");
-      setUsers(response.data);
-      setLoading(false);
+      const response = await api.get(
+        `/users?page=${page}&per_page=${pagination.pageSize}`,
+      );
+      setUsers(response.data.data);
+      setPagination((prev) => ({
+        ...prev,
+        current: page,
+        total: response.data.meta.total_rows,
+      }));
     } catch (error) {
       message.error("Failed to load users");
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadInitialUsers();
-  }, [api]);
+    loadInitialUsers(pagination.current);
+  }, [api, pagination.current]);
 
   const handleAddUser = async (values) => {
     setLoadingAction(true);
@@ -82,12 +96,11 @@ function UserManagement() {
       const response = await api.post("/signup", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setUsers([...users, response.data]);
       message.success("User added successfully");
-      setIsModalVisible(false);
       form.resetFields();
       setImageUrl("");
       setImageFile(null);
+      loadInitialUsers(pagination.current); // Reload users after adding
     } catch (error) {
       if (error.response && error.response.status === 409) {
         message.error("Email already exists, please use a different email");
@@ -96,6 +109,7 @@ function UserManagement() {
       }
     } finally {
       setLoadingAction(false);
+      setIsModalVisible(false);
     }
   };
 
@@ -114,37 +128,12 @@ function UserManagement() {
       }
 
       // Update the user data in the backend
-      const response = await api.put(`/users/${editingUser.id}`, formData, {
+      await api.put(`/users/${editingUser.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Get the updated user data from the response
-      const updatedUser = response.data;
-
-      // Update the users list locally with the new image or name/email/phone
-      setUsers(
-        users.map((user) =>
-          user.id === editingUser.id
-            ? {
-                ...user,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                phone: updatedUser.phone,
-                // Set the updated image URL returned from the server
-                img: updatedUser.img,
-              }
-            : user,
-        ),
-      );
-
       message.success("User updated successfully");
-
-      // Reset modal state
-      setIsModalVisible(false);
-      setEditingUser(null);
-      form.resetFields();
-      setImageUrl(""); // Reset image URL
-      setImageFile(null); // Reset image file
+      loadInitialUsers(pagination.current); // Reload users after editing
     } catch (error) {
       if (error.response && error.response.status === 409) {
         message.error("Email already exists, please use a different email");
@@ -153,6 +142,11 @@ function UserManagement() {
       }
     } finally {
       setLoadingAction(false);
+      setIsModalVisible(false);
+      setEditingUser(null);
+      form.resetFields();
+      setImageUrl(""); // Reset image URL
+      setImageFile(null); // Reset image file
     }
   };
 
@@ -163,7 +157,7 @@ function UserManagement() {
       name: user.name,
       email: user.email,
       phone: user.phone,
-      pssword: user.password,
+      password: user.password,
     });
     setIsModalVisible(true);
     setIsAddingUser(false);
@@ -172,8 +166,8 @@ function UserManagement() {
   const handleDeleteUser = async (userId) => {
     try {
       await api.delete(`/users/${userId}`);
-      setUsers(users.filter((user) => user.id !== userId));
       message.success("User deleted successfully");
+      loadInitialUsers(pagination.current); // Reload users after deletion
     } catch (error) {
       message.error("Failed to delete user");
     }
@@ -191,6 +185,10 @@ function UserManagement() {
     setEditingUser(null);
     setIsModalVisible(true);
     setIsAddingUser(true);
+  };
+
+  const handlePageChange = (page) => {
+    setPagination((prev) => ({ ...prev, current: page }));
   };
 
   return (
@@ -244,6 +242,14 @@ function UserManagement() {
       >
         Add User
       </Button>
+
+      <Pagination
+        current={pagination.current}
+        pageSize={pagination.pageSize}
+        total={pagination.total}
+        onChange={handlePageChange}
+        style={{ marginTop: "20px", textAlign: "center" }}
+      />
 
       <Modal
         title={editingUser ? "Edit User" : "Add User"}
@@ -306,9 +312,11 @@ function UserManagement() {
             )}
           </Form.Item>
 
-          <Button type="primary" htmlType="submit" loading={loadingAction}>
-            {isAddingUser ? "Add User" : "Save Changes"}
-          </Button>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loadingAction}>
+              Submit
+            </Button>
+          </Form.Item>
         </Form>
       </Modal>
     </div>

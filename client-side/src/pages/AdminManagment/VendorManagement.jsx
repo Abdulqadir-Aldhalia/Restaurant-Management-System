@@ -9,28 +9,30 @@ import {
   Form,
   Popconfirm,
   Spin,
-  Select,
+  Switch,
+  Pagination,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { baseUrl } from "../../const";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Switch } from "antd";
 
 function VendorManagement() {
   const [vendors, setVendors] = useState([]);
-  const [users, setUsers] = useState([]); // List of users to assign as admins
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState(false);
   const [editingVendor, setEditingVendor] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState(null);
-  const [currentAdmin, setCurrentAdmin] = useState(null); // Current admin of the vendor
   const [form] = Form.useForm();
   const [isAddingVendor, setIsAddingVendor] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState(null); // Selected admin for the vendor
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalVendors, setTotalVendors] = useState(0);
+  const [vendorsPerPage] = useState(10); // Change this to your desired items per page
 
   const userToken = useSelector((state) => state.user.userToken);
   const dispatch = useDispatch();
@@ -58,39 +60,22 @@ function VendorManagement() {
   );
 
   useEffect(() => {
-    let isMounted = true;
-
     const fetchVendors = async () => {
       try {
-        const response = await api.get("/vendors");
-        if (isMounted) {
-          setVendors(response.data);
-          setLoading(false);
-        }
+        const response = await api.get(
+          `/vendors?page=${currentPage}&limit=${vendorsPerPage}`,
+        );
+        setVendors(response.data.data); // Adjusted to match the new API response
+        setTotalVendors(response.data.total); // Assuming total vendors count comes in the response
+        setLoading(false);
       } catch (error) {
-        if (isMounted) {
-          message.error("Failed to load vendors");
-          setLoading(false);
-        }
-      }
-    };
-
-    const fetchUsers = async () => {
-      try {
-        const response = await api.get("/users");
-        setUsers(response.data);
-      } catch (error) {
-        message.error("Failed to load users");
+        message.error("Failed to load vendors");
+        setLoading(false);
       }
     };
 
     fetchVendors();
-    fetchUsers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [userToken]);
+  }, [userToken, currentPage]); // Fetch vendors when currentPage changes
 
   const handleAddVendor = async (values) => {
     setLoadingAction(true);
@@ -104,7 +89,7 @@ function VendorManagement() {
       const response = await api.post("/vendors", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setVendors([...vendors, response.data]);
+      setVendors((prev) => [response.data, ...prev]);
       message.success("Vendor added successfully");
       setIsModalVisible(false);
       form.resetFields();
@@ -123,7 +108,6 @@ function VendorManagement() {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("description", values.description);
-
       if (imageFile) {
         formData.append("img", imageFile);
       }
@@ -134,15 +118,10 @@ function VendorManagement() {
 
       const updatedVendor = response.data;
 
-      setVendors(
-        vendors.map((vendor) =>
+      setVendors((prev) =>
+        prev.map((vendor) =>
           vendor.id === editingVendor.id
-            ? {
-                ...vendor,
-                name: updatedVendor.name,
-                description: updatedVendor.description,
-                img: updatedVendor.img,
-              }
+            ? { ...vendor, ...updatedVendor }
             : vendor,
         ),
       );
@@ -169,13 +148,12 @@ function VendorManagement() {
     });
     setIsModalVisible(true);
     setIsAddingVendor(false);
-    setCurrentAdmin(vendor.currentAdmin);
   };
 
   const handleDeleteVendor = async (vendorId) => {
     try {
       await api.delete(`/vendors/${vendorId}`);
-      setVendors(vendors.filter((vendor) => vendor.id !== vendorId));
+      setVendors((prev) => prev.filter((vendor) => vendor.id !== vendorId));
       message.success("Vendor deleted successfully");
     } catch (error) {
       message.error("Failed to delete vendor");
@@ -194,85 +172,6 @@ function VendorManagement() {
     setEditingVendor(null);
     setIsModalVisible(true);
     setIsAddingVendor(true);
-  };
-
-  const handleSubscriptionToggle = async (vendorId, isSubscribed) => {
-    setLoadingAction(true);
-    try {
-      await api.put(`/vendors/${vendorId}/subscription`, {
-        status: isSubscribed ? "enable" : "disable",
-      });
-      setVendors(
-        vendors.map((vendor) =>
-          vendor.id === vendorId ? { ...vendor, isSubscribed } : vendor,
-        ),
-      );
-      message.success(
-        `Subscription ${isSubscribed ? "enabled" : "disabled"} successfully`,
-      );
-    } catch (error) {
-      message.error("Failed to update subscription status");
-    } finally {
-      setLoadingAction(false);
-    }
-  };
-
-  const handleAssignAdmin = async () => {
-    if (!selectedAdmin) {
-      message.error("Please select a user to assign as admin.");
-      return;
-    }
-
-    setLoadingAction(true);
-    try {
-      const form = new FormData();
-      form.append("user_id", selectedAdmin);
-      form.append("vendor_id", editingVendor.id);
-      await api.post("/vendors/assign-vendor-admin", form);
-
-      // Update the local state with the new admin
-      setVendors(
-        vendors.map((vendor) =>
-          vendor.id === editingVendor.id
-            ? { ...vendor, currentAdmin: selectedAdmin }
-            : vendor,
-        ),
-      );
-      message.success("Admin assigned successfully");
-      setSelectedAdmin(null);
-    } catch (error) {
-      message.error("Failed to assign admin");
-    } finally {
-      setLoadingAction(false);
-    }
-  };
-
-  const handleRevokeAdmin = async (vendor) => {
-    if (!vendor.currentAdmin) {
-      message.error("No admin to revoke.");
-      return;
-    }
-
-    setLoadingAction(true);
-    const form = new FormData();
-    form.append("user_id", vendor.currentAdmin);
-    form.append("vendor_id", vendor.id); // Extract vendor.id correctly
-
-    try {
-      await api.post("/vendors/revoke-vendor-admin", form);
-
-      // Update the local state to remove the admin
-      setVendors(
-        vendors.map((v) =>
-          v.id === vendor.id ? { ...v, currentAdmin: null } : v,
-        ),
-      );
-      message.success("Admin revoked successfully");
-    } catch (error) {
-      message.error("Failed to revoke admin");
-    } finally {
-      setLoadingAction(false);
-    }
   };
 
   return (
@@ -307,69 +206,47 @@ function VendorManagement() {
                   >
                     <Button danger>Delete</Button>
                   </Popconfirm>,
-                  <Switch
-                    checked={vendor.isSubscribed}
-                    onChange={(checked) =>
-                      handleSubscriptionToggle(vendor.id, checked)
-                    }
-                  />,
                 ]}
               >
                 <Card.Meta
                   title={vendor.name}
                   description={vendor.description}
                 />
-                <p>
-                  Current Admin:{" "}
-                  {vendor.currentAdmin ? (
-                    <span>{vendor.currentAdmin}</span>
-                  ) : (
-                    <span>No admin assigned</span>
-                  )}
-                </p>
-                <Popconfirm
-                  title="Are you sure you want to revoke the current admin?"
-                  onConfirm={() => handleRevokeAdmin(vendor)}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <Button disabled={!vendor.currentAdmin} danger>
-                    Revoke Admin
-                  </Button>
-                </Popconfirm>
               </Card>
             );
           })}
-
           <Button
-            type="dashed"
-            style={{ width: 240, height: 240 }}
+            type="primary"
+            icon={<PlusOutlined />}
             onClick={showAddVendorModal}
           >
-            <PlusOutlined />
-            <br />
             Add Vendor
           </Button>
         </div>
       )}
-
+      <Pagination
+        current={currentPage}
+        pageSize={vendorsPerPage}
+        total={totalVendors}
+        onChange={(page) => setCurrentPage(page)}
+        style={{ marginTop: "16px", textAlign: "center" }}
+      />
       <Modal
         title={isAddingVendor ? "Add Vendor" : "Edit Vendor"}
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
-        onOk={() => {
-          isAddingVendor
-            ? form.submit()
-            : handleSaveVendor(form.getFieldsValue());
-        }}
-        okText={isAddingVendor ? "Add" : "Save"}
-        confirmLoading={loadingAction}
+        footer={null}
       >
-        <Form form={form} layout="vertical" onFinish={handleAddVendor}>
+        <Form
+          form={form}
+          onFinish={isAddingVendor ? handleAddVendor : handleSaveVendor}
+        >
           <Form.Item
             label="Name"
             name="name"
-            rules={[{ required: true, message: "Please input vendor name!" }]}
+            rules={[
+              { required: true, message: "Please input the vendor name!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -377,52 +254,35 @@ function VendorManagement() {
             label="Description"
             name="description"
             rules={[
-              { required: true, message: "Please input vendor description!" },
+              {
+                required: true,
+                message: "Please input the vendor description!",
+              },
             ]}
           >
-            <Input />
+            <Input.TextArea />
           </Form.Item>
           <Form.Item label="Image">
             <Upload
-              beforeUpload={() => false}
+              accept="image/*"
+              beforeUpload={() => false} // Prevent automatic upload
               onChange={handleImageUpload}
-              showUploadList={false}
             >
-              <Button icon={<PlusOutlined />}>Upload Image</Button>
+              <Button>Upload Image</Button>
             </Upload>
             {imageUrl && (
               <img
                 src={imageUrl}
                 alt="Vendor"
-                style={{ width: "100%", marginTop: 10 }}
+                style={{ width: "100px", marginTop: "10px" }}
               />
             )}
           </Form.Item>
-
-          {!isAddingVendor && (
-            <>
-              <Form.Item label="Assign Admin">
-                <Select
-                  placeholder="Select an admin"
-                  onChange={(value) => setSelectedAdmin(value)}
-                  style={{ width: "100%" }}
-                >
-                  {users.map((user) => (
-                    <Select.Option key={user.id} value={user.id}>
-                      {user.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-              <Button
-                onClick={handleAssignAdmin}
-                disabled={!selectedAdmin || loadingAction}
-                type="primary"
-              >
-                Assign Admin
-              </Button>
-            </>
-          )}
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loadingAction}>
+              {isAddingVendor ? "Add Vendor" : "Save Vendor"}
+            </Button>
+          </Form.Item>
         </Form>
       </Modal>
     </div>

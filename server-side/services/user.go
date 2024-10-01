@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,26 +13,32 @@ import (
 	"github.com/lib/pq"
 )
 
-func GetAllUsers(w http.ResponseWriter, r *http.Request) {
+func GetUsers(w http.ResponseWriter, r *http.Request) {
 	var users []model.User
 
-	query, args, err := statement.Select(strings.Join(user_columns, ", ")).
-		From("users").
-		ToSql()
+	meta, err := GetData(r, &users, "users", user_columns)
 	if err != nil {
-		HandelError(w, http.StatusInternalServerError, err.Error())
+		if err == sql.ErrNoRows {
+			log.Println("No Rows found")
+			HandelError(w, http.StatusNotFound, "No users found")
+			return
+
+		}
+		log.Println("Error retrieving vendros => ", err)
+		HandelError(w, http.StatusInternalServerError, "Error retrieving vendors")
 		return
 	}
 
-	if err := db.Select(&users, query, args...); err != nil {
-		HandelError(w, http.StatusInternalServerError, err.Error())
-		return
+	result := model.Response{
+		Meta: meta,
+		Data: users,
 	}
 
-	SendJsonResponse(w, http.StatusOK, users)
+	SendJsonResponse(w, http.StatusOK, result)
 }
 
 func GetUserById(w http.ResponseWriter, r *http.Request) {
+	log.Printf("user from userService -> ", r.Context().Value(userContextKey))
 	var user model.User
 	id := r.PathValue("id")
 	query, args, err := statement.Select(strings.Join(user_columns, ", ")).
@@ -148,13 +155,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Execute the update query and handle unique constraint violation
 	if err := db.QueryRowx(query, args...).StructScan(&user); err != nil {
 		if newImg != nil {
 			DeleteImageFile(*newImg)
 		}
 
-		// Check for duplicate key (unique constraint) violation
 		if pqErr, ok := err.(*pq.Error); ok {
 			if pqErr.Code == "23505" {
 				HandelError(w, http.StatusConflict, "Email already exists")
@@ -167,7 +172,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Delete old image if it was updated
 	if oldImg != nil && *oldImg != "" {
 		if err := DeleteImageFile(*oldImg); err != nil {
 			log.Println(err)
@@ -175,7 +179,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Send updated user as response
 	SendJsonResponse(w, http.StatusOK, user)
 }
 
@@ -198,7 +201,6 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(2 * time.Second)
 		return
 	}
-	// If the user has an image, delete it
 	if img != nil {
 		if err := DeleteImageFile(*img); err != nil {
 			log.Println(err)

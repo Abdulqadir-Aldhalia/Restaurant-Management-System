@@ -36,7 +36,7 @@ func GetRoleById(w http.ResponseWriter, r *http.Request) {
 	roleId := r.PathValue("id")
 
 	if roleId == "" {
-		HandleError(w, http.StatusBadRequest, "There is not id in the path!")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "There is not id in the path!")
 		return
 	}
 
@@ -45,16 +45,16 @@ func GetRoleById(w http.ResponseWriter, r *http.Request) {
 		Where("id = ?", roleId).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, err.Error())
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	var role model.Role
 	if err := db.Get(&role, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			HandleError(w, http.StatusNotFound, "role not found")
+			SendCustomeErrorResponse(w, http.StatusNotFound, "role not found")
 		} else {
-			HandleError(w, http.StatusInternalServerError, err.Error())
+			SendCustomeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}

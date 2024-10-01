@@ -29,7 +29,7 @@ func CreateNewItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if price <= 0 {
-		HandleError(w, http.StatusBadRequest, "Price must be greater than zero")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Price must be greater than zero")
 		return
 	}
 
@@ -54,8 +54,7 @@ func CreateNewItem(w http.ResponseWriter, r *http.Request) {
 	err = db.Get(&id, query, args...)
 	fmt.Printf("query = %s and args = %s", query, args)
 	if err != nil {
-		log.Printf("vendor is not exist %s", err)
-		HandelError(w, http.StatusInternalServerError, "error while excuting qeury !")
+		SendErrorResponse(w, err)
 		return
 	}
 
@@ -91,35 +90,35 @@ func CreateNewItem(w http.ResponseWriter, r *http.Request) {
 	SendJsonResponse(w, http.StatusCreated, item)
 }
 
-func GetAllItems(w http.ResponseWriter, r *http.Request) {
+func GetItems(w http.ResponseWriter, r *http.Request) {
 	var items []model.Item
 
-	query, args, err := statement.Select(strings.Join(item_columns, ",")).
-		From("items").
-		ToSql()
+	meta, err := GetData(r, &items, "items", item_columns)
 	if err != nil {
-		HandelError(w, http.StatusInternalServerError, err.Error())
+		if err == sql.ErrNoRows {
+			log.Println("No Rows found")
+			HandelError(w, http.StatusNotFound, "No items found")
+			return
+
+		}
+		log.Println("Error retrieving items => ", err)
+		HandelError(w, http.StatusInternalServerError, "Error retrieving items ")
 		return
 	}
 
-	if err := db.Select(&items, query, args...); err != nil {
-		HandelError(w, http.StatusInternalServerError, err.Error())
-		return
+	result := model.Response{
+		Meta: meta,
+		Data: items,
 	}
 
-	if items == nil {
-		HandelError(w, http.StatusNotFound, "There is no vendors!")
-		return
-	}
-
-	SendJsonResponse(w, http.StatusOK, items)
+	SendJsonResponse(w, http.StatusOK, result)
 }
 
 func GetItemById(w http.ResponseWriter, r *http.Request) {
 	itemID := r.PathValue("id")
 
 	if itemID == "" {
-		HandleError(w, http.StatusBadRequest, "There is not id in the path!")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "There is not id in the path!")
 	}
 
 	query, args, err := statement.Select(strings.Join(item_columns, ",")).
@@ -127,16 +126,16 @@ func GetItemById(w http.ResponseWriter, r *http.Request) {
 		Where("id = ?", itemID).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, err.Error())
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	var item model.Item
 	if err := db.Get(&item, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			HandleError(w, http.StatusNotFound, "Item not found")
+			SendCustomeErrorResponse(w, http.StatusNotFound, "Item not found")
 		} else {
-			HandleError(w, http.StatusInternalServerError, err.Error())
+			SendCustomeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
@@ -250,19 +249,19 @@ func DeleteItemById(w http.ResponseWriter, r *http.Request) {
 		Where("id = ?", id).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error generating delete query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error generating delete query")
 		return
 	}
 
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error executing delete query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error executing delete query")
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error getting rows affected")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error getting rows affected")
 		return
 	}
 
@@ -277,19 +276,19 @@ func DeleteAllItems(w http.ResponseWriter, r *http.Request) {
 		From("items").
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error generating delete query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error generating delete query")
 		return
 	}
 
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error executing delete query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error executing delete query")
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error getting rows affected")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error getting rows affected")
 		return
 	}
 

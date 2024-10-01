@@ -58,101 +58,32 @@ func CreateNewVendor(w http.ResponseWriter, r *http.Request) {
 func GetVendors(w http.ResponseWriter, r *http.Request) {
 	var vendors []model.Vendor
 
-	q := r.FormValue("query")
-	f := r.FormValue("filter")
-	s := r.FormValue("sort")
-
-	statementBuilder := statement.Select(strings.Join(vendor_columns, ", ")).From("vendors")
-
-	if q != "" {
-		statementBuilder = statementBuilder.Where("name ILIKE ?", "%"+q+"%")
-	}
-
-	if f != "" {
-		vendorId, err := uuid.Parse(f)
-		if err != nil {
-			log.Printf("invalid vendor uuid => %s", f)
-		} else {
-			query, args, err := statement.Select("id").
-				From("vendors").
-				Where("id = ?", vendorId).
-				ToSql()
-			if err != nil {
-				log.Println("error while creating query -> ", err)
-			}
-
-			result, err := db.Exec(query, args...)
-			if err != nil {
-				log.Println("Error: vendor query result -> ", result)
-				log.Println("Error: vendor query error -> ", err)
-			} else {
-				statementBuilder = statementBuilder.Where("id = ?", f)
-			}
-		}
-	}
-
-	if s != "" {
-		switch s {
-		case "-created_at":
-			statementBuilder = statementBuilder.OrderBy("created_at DESC")
-		case "created_at":
-			statementBuilder = statementBuilder.OrderBy("created_at ASC")
-		case "-name":
-			statementBuilder = statementBuilder.OrderBy("name DESC")
-		case "name":
-			statementBuilder = statementBuilder.OrderBy("name ASC")
-		}
-	} else if s == "" {
-		log.Println("No Sort option were passed")
-	} else {
-		log.Println("Invalid sort type => ", s)
-	}
-
-	query, args, err := statementBuilder.ToSql()
+	meta, err := GetData(r, &vendors, "vendors", vendor_columns)
 	if err != nil {
-		log.Println("Error while building query -> ", err)
-		HandleError(w, http.StatusInternalServerError, "Error building query")
+		if err == sql.ErrNoRows {
+			log.Println("No Rows found")
+			HandelError(w, http.StatusNotFound, "No vendor found")
+			return
+
+		}
+		log.Println("Error retrieving vendros => ", err)
+		HandelError(w, http.StatusInternalServerError, "Error retrieving vendors")
 		return
 	}
 
-	if err := db.Select(&vendors, query, args...); err != nil {
-		log.Println("Error while executing query -> ", err)
-		HandleError(w, http.StatusInternalServerError, "Error fetching vendors")
-		return
+	result := model.Response{
+		Meta: meta,
+		Data: vendors,
 	}
 
-	SendJsonResponse(w, http.StatusOK, vendors)
-}
-
-func GetAllVendors(w http.ResponseWriter, r *http.Request) {
-	var vendors []model.Vendor
-
-	query, args, err := statement.Select(strings.Join(vendor_columns, ",")).
-		From("vendors").
-		ToSql()
-	if err != nil {
-		HandelError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if err := db.Select(&vendors, query, args...); err != nil {
-		HandelError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if vendors == nil {
-		HandelError(w, http.StatusNotFound, "There is no vendors!")
-		return
-	}
-
-	SendJsonResponse(w, http.StatusOK, vendors)
+	SendJsonResponse(w, http.StatusOK, result)
 }
 
 func GetVendorById(w http.ResponseWriter, r *http.Request) {
 	vendorID := r.PathValue("id")
 
 	if vendorID == "" {
-		HandleError(w, http.StatusBadRequest, "There is not id in the path!")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "There is not id in the path!")
 	}
 
 	query, args, err := statement.Select(strings.Join(vendor_columns, ",")).
@@ -160,16 +91,16 @@ func GetVendorById(w http.ResponseWriter, r *http.Request) {
 		Where("id = ?", vendorID).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, err.Error())
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	var vendor model.Vendor
 	if err := db.Get(&vendor, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			HandleError(w, http.StatusNotFound, "Vendor not found")
+			SendCustomeErrorResponse(w, http.StatusNotFound, "Vendor not found")
 		} else {
-			HandleError(w, http.StatusInternalServerError, err.Error())
+			SendCustomeErrorResponse(w, http.StatusInternalServerError, err.Error())
 		}
 		return
 	}
@@ -264,19 +195,19 @@ func DeleteAllVendors(w http.ResponseWriter, r *http.Request) {
 		From("vendors").
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error generating delete query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error generating delete query")
 		return
 	}
 
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error executing delete query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error executing delete query")
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error getting rows affected")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error getting rows affected")
 		return
 	}
 
@@ -297,19 +228,19 @@ func DeleteVendorById(w http.ResponseWriter, r *http.Request) {
 		Where("id = ?", id).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error generating delete query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error generating delete query")
 		return
 	}
 
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error executing delete query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error executing delete query")
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error getting rows affected")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error getting rows affected")
 		return
 	}
 

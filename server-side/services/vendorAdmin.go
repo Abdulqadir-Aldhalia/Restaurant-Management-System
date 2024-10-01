@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"server-side/model"
@@ -18,7 +19,7 @@ func GetAllAdminsForVendor(w http.ResponseWriter, r *http.Request) {
 
 	vendor_id, err := uuid.Parse(vendorId)
 	if err != nil {
-		HandleError(w, http.StatusBadRequest, "Invalid UUID format for vendor_id")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Invalid UUID format for vendor_id")
 		log.Println(err)
 		return
 	}
@@ -28,13 +29,13 @@ func GetAllAdminsForVendor(w http.ResponseWriter, r *http.Request) {
 		Where("vendor_id = ?", vendor_id).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while creating query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while creating query")
 		log.Println(err)
 		return
 	}
 
 	if err := db.Select(&vendorAdmins, query, args...); err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while executing query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while executing query")
 		log.Println(err)
 		return
 	}
@@ -45,7 +46,7 @@ func GetAllAdminsForVendor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(userIds) == 0 {
-		HandleError(w, http.StatusNotFound, "There is no admins for the provided vendor !")
+		SendCustomeErrorResponse(w, http.StatusNotFound, "There is no admins for the provided vendor !")
 		return
 	}
 
@@ -55,13 +56,13 @@ func GetAllAdminsForVendor(w http.ResponseWriter, r *http.Request) {
 		Where(squirrel.Eq{"id": userIds}).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while creating user query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while creating user query")
 		log.Println(err)
 		return
 	}
 
 	if err := db.Select(&admins, query, args...); err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while executing user query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while executing user query")
 		log.Println(err)
 		return
 	}
@@ -126,8 +127,15 @@ func AssignAdminToVendor(w http.ResponseWriter, r *http.Request) {
 
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while excuting query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while excuting query")
 		log.Println(err)
+		return
+	}
+
+	query = fmt.Sprintf("INSERT INTO user_roles VALUES ('%s', '%d')", userId, 2)
+	_, err = db.Exec(query)
+	if err != nil {
+		SendErrorResponse(w, err)
 		return
 	}
 
@@ -141,20 +149,20 @@ func RevokeAdminFromVendor(w http.ResponseWriter, r *http.Request) {
 	vendorId := r.FormValue("vendor_id")
 
 	if userId == "" || vendorId == "" {
-		HandleError(w, http.StatusBadRequest, "userId or vendorId can't be empty!")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "userId or vendorId can't be empty!")
 		return
 	}
 
 	user_id, err := uuid.Parse(userId)
 	if err != nil {
-		HandleError(w, http.StatusBadRequest, "Invalid UUID format for user_id")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Invalid UUID format for user_id")
 		log.Println(err)
 		return
 	}
 
 	vendor_id, err := uuid.Parse(vendorId)
 	if err != nil {
-		HandleError(w, http.StatusBadRequest, "Invalid UUID format for vendor_id")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Invalid UUID format for vendor_id")
 		log.Println(err)
 		return
 	}
@@ -165,14 +173,14 @@ func RevokeAdminFromVendor(w http.ResponseWriter, r *http.Request) {
 		Where("vendor_id = ?", vendor_id).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while creating query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while creating query")
 		log.Println(err)
 		return
 	}
 
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while executing query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while executing query")
 		log.Println(err)
 		return
 	}

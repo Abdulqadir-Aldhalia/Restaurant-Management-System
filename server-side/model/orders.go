@@ -1,21 +1,25 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
 
-type order_status int
+	"github.com/google/uuid"
+)
+
+type order_status string
 
 const (
-	PENDING order_status = iota + 1
-	PREPARING
-	READY
+	PENDING   order_status = "PENDING"
+	PREPARING order_status = "PREPEARING"
+	READY     order_status = "READY"
 )
 
 type Orders struct {
-	id               uuid.UUID    `db:"id" json:"id"`
-	total_order_cost float32      `db:"total_order_cost" json:"total_order_cost"`
-	customer_id      uuid.UUID    `db:"customer_id" json:"customer_id"`
-	vendor_id        uuid.UUID    `db:"vendor_id" json:"vendor_id"`
-	status           order_status `db:"status" json:"status"`
-	created_at       uuid.Time    `db:"created_at" json:"created_at"`
-	updated_at       uuid.Time    `db:"updated_at" json:"updated_at"`
+	Id               uuid.UUID    `db:"id" json:"id"`
+	Total_order_cost float32      `db:"total_order_cost" json:"total_order_cost"`
+	Customer_id      uuid.UUID    `db:"customer_id" json:"customer_id"`
+	Vendor_id        uuid.UUID    `db:"vendor_id" json:"vendor_id"`
+	Status           order_status `db:"status" json:"status"`
+	Created_at       time.Time    `db:"created_at" json:"created_at"`
+	Updated_at       time.Time    `db:"updated_at" json:"updated_at"`
 }

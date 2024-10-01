@@ -14,7 +14,7 @@ func AdminSignin(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 	log.Printf("%s %s", username, password)
 	if username == "" || password == "" {
-		HandleError(w, http.StatusBadRequest, "Username and password can't be empty!")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Username and password can't be empty!")
 		return
 	}
 
@@ -35,7 +35,7 @@ func AdminSignin(w http.ResponseWriter, r *http.Request) {
 		Where("email = ?", username).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while creating query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while creating query")
 		log.Println("SQL generation error:", err)
 		return
 	}
@@ -43,9 +43,9 @@ func AdminSignin(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow(query, args...).Scan(&userId, &storedEmail, &storedHashedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			HandleError(w, http.StatusBadRequest, "Username or password is incorrect")
+			SendCustomeErrorResponse(w, http.StatusBadRequest, "Username or password is incorrect")
 		} else {
-			HandleError(w, http.StatusInternalServerError, "Error while retrieving user")
+			SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while retrieving user")
 			log.Println("Database query error:", err)
 		}
 		return
@@ -56,7 +56,7 @@ func AdminSignin(w http.ResponseWriter, r *http.Request) {
 		Where("user_id = ? AND role_id = ?", userId, 1).
 		ToSql()
 	if rErr != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while creating role check query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while creating role check query")
 		log.Println("SQL generation error:", rErr)
 		return
 	}
@@ -67,22 +67,22 @@ func AdminSignin(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow(rQuery, rArgs...).Scan(&userUUID, &roleId)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			HandleError(w, http.StatusNotFound, "User is not an admin!")
+			SendCustomeErrorResponse(w, http.StatusNotFound, "User is not an admin!")
 		} else {
-			HandleError(w, http.StatusInternalServerError, "Error while retrieving user role")
+			SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while retrieving user role")
 			log.Println("Database query error:", err)
 		}
 		return
 	}
 
 	if !matchPassword(password, storedHashedPassword) {
-		HandleError(w, http.StatusBadRequest, "Username or password is incorrect")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Username or password is incorrect")
 		return
 	}
 
 	token, err := GenerateJWT(storedEmail)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while generating token")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while generating token")
 		log.Println("JWT generation error:", err)
 		return
 	}
@@ -98,7 +98,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		HandleError(w, http.StatusBadRequest, "Username and password can't be empty!")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Username and password can't be empty!")
 		return
 	}
 	if len(password) < 8 {
@@ -116,7 +116,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		Where("email = ?", username).
 		ToSql()
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while creating query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while creating query")
 		log.Println("SQL generation error:", err)
 		return
 	}
@@ -125,22 +125,22 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow(query, args...).Scan(&storedEmail, &storedHashedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			HandleError(w, http.StatusBadRequest, "Username or password is incorrect")
+			SendCustomeErrorResponse(w, http.StatusBadRequest, "Username or password is incorrect")
 		} else {
-			HandleError(w, http.StatusInternalServerError, "Error while retrieving user")
+			SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while retrieving user")
 			log.Println("Database query error:", err)
 		}
 		return
 	}
 
 	if !matchPassword(password, storedHashedPassword) {
-		HandleError(w, http.StatusBadRequest, "Username or password is incorrect")
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Username or password is incorrect")
 		return
 	}
 
 	token, err := GenerateJWT(storedEmail)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while generating token")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while generating token")
 		log.Println("JWT generation error:", err)
 		return
 	}

@@ -44,7 +44,7 @@ func GrantRole(w http.ResponseWriter, r *http.Request) {
 
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while excuting query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while excuting query")
 		log.Fatal(err)
 		return
 	}
@@ -89,7 +89,7 @@ func RevokeRole(w http.ResponseWriter, r *http.Request) {
 
 	result, err := db.Exec(query, args...)
 	if err != nil {
-		HandleError(w, http.StatusInternalServerError, "Error while excuting query")
+		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while excuting query")
 		return
 	}
 

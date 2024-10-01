@@ -19,7 +19,7 @@ func Controllers() {
 	if r == nil {
 		log.Fatalf("Router failed to initialize")
 	}
-	// Apply CORS middleware
+
 	r.Use(services.CORS)
 
 	r.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
@@ -56,7 +56,7 @@ func Controllers() {
 
 func handleUserRoutes(sub *michi.Router) {
 	// users
-	sub.HandleFunc("GET users", services.GetAllUsers)
+	sub.HandleFunc("GET users", services.GetUsers)
 	sub.HandleFunc("GET users/{id}", services.GetUserById)
 	sub.HandleFunc("PUT users/{id}", services.UpdateUser)
 
@@ -64,18 +64,39 @@ func handleUserRoutes(sub *michi.Router) {
 	sub.HandleFunc("GET vendors", services.GetVendors)
 
 	// items
-	sub.HandleFunc("GET items", services.GetAllItems)
+	sub.HandleFunc("GET items", services.GetItems)
 	sub.HandleFunc("GET items/{id}", services.GetItemById)
 
 	// tables
 	sub.HandleFunc("GET tables", services.GetTables)
+	sub.HandleFunc("GET tables/{id}", services.GetTableById)
+
+	sub.HandleFunc("PUT tables/{id}", services.UpdateTable)
+	sub.HandleFunc("PUT tables/{id}/reserve", services.ReserveTable)
+
+	// carts
+	sub.HandleFunc("GET cart", services.GetUserCart)
+	sub.HandleFunc("POST cart", services.CreateCart)
+	sub.HandleFunc("POST cart/add", services.AddItemToCart)
+
+	sub.HandleFunc("DELETE cart/empty", services.EmptyTheCart)
+	sub.HandleFunc("DELETE cart/item", services.RemoveItemFromCart)
+
+	// order
+	sub.HandleFunc("POST cart/checkout", services.CreateOrder)
+	sub.HandleFunc("GET orders/vendors/{id}", services.GetVendorOrders)
+	sub.HandleFunc("GET orders", services.GetUserOrders)
+	sub.HandleFunc("GET orders/{id}", services.GetOrderItems)
+	sub.HandleFunc("PUT orders/{id}", services.UpdateOrder)
 }
 
 func handleVendorRoutes(sub *michi.Router) {
-	// sub.HandleFunc("GET vendors", services.GetAllVendors)
 	sub.HandleFunc("GET vendors/{id}", services.GetVendorById)
 	sub.HandleFunc("POST vendors", services.CreateNewVendor)
 	sub.HandleFunc("PUT vendors/{id}", services.UpdateVendor)
+
+	// tables
+	sub.HandleFunc("DELETE tables/{id}/empty", services.EmptyTheTable)
 }
 
 func handleRoleRoutes(sub *michi.Router) {

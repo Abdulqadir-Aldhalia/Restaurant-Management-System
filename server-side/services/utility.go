@@ -49,12 +49,6 @@ func GetRootpath(dir string) string {
 	return filepath.Join(cwd, dir)
 }
 
-func HandleError(w http.ResponseWriter, status int, message string) {
-	SendJsonResponse(w, status, map[string]string{
-		"error": message,
-	})
-}
-
 // SaveImageFile saves the uploaded image file to a specified directory with a new name
 func SaveImageFile(file io.Reader, table string, filename string) (string, error) {
 	// Create directory structure if it doesn't exist
