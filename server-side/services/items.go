@@ -16,8 +16,17 @@ import (
 )
 
 func CreateNewItem(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userDetails, ok := ctx.Value(userContextKey).(UserDetails)
+	if !ok {
+		SendCustomeErrorResponse(w, http.StatusUnauthorized, "You are not Authorized to do this action")
+		return
+	}
+
+	user := userDetails.UserData
+
 	if ValidateIsEmptyOrNil(r.FormValue("vendor_id"), r.FormValue("name"), r.FormValue("price")) {
-		HandelError(w, http.StatusBadGateway, "name or price can't be empty!")
+		HandelError(w, http.StatusBadRequest, "name or price can't be empty!")
 		return
 	}
 
@@ -45,16 +54,23 @@ func CreateNewItem(w http.ResponseWriter, r *http.Request) {
 		Vendor_id: uuid.MustParse(r.FormValue("vendor_id")),
 	}
 
-	query, args, err := statement.Select("id").
-		From("vendors").
-		Where("id = ?", item.Vendor_id).
-		ToSql()
-
-	var id string
-	err = db.Get(&id, query, args...)
-	fmt.Printf("query = %s and args = %s", query, args)
+	exist, err := RowExists("vendor_admins", map[string]interface{}{"vendor_id": item.Vendor_id.String(), "user_id": user.ID.String()})
 	if err != nil {
 		SendErrorResponse(w, err)
+		return
+	}
+	if !exist {
+		SendCustomeErrorResponse(w, http.StatusUnauthorized, "You are not Authorized to do this action")
+		return
+	}
+
+	exist, err = RowExists("vendors", map[string]interface{}{"id": item.Vendor_id.String()})
+	if err != nil {
+		SendErrorResponse(w, err)
+		return
+	}
+	if !exist {
+		SendCustomeErrorResponse(w, http.StatusNotFound, "Vendor not found")
 		return
 	}
 
@@ -74,18 +90,16 @@ func CreateNewItem(w http.ResponseWriter, r *http.Request) {
 		item.Img = &imageName
 	}
 
-	query, args, err = statement.Insert("items").
+	query, args, err := statement.Insert("items").
 		Columns("id, name, price, img, vendor_id").
 		Values(item.Id, item.Name, item.Price, item.Img, item.Vendor_id).
+		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(item_columns, ", "))).
 		ToSql()
 
-	result, err := db.Exec(query, args...)
-	if err != nil {
-		log.Printf("error while excuting query, %s", err)
-		HandelError(w, http.StatusInternalServerError, "error while excuting query")
+	if err := db.QueryRowx(query, args...).StructScan(&item); err != nil {
+		HandelError(w, http.StatusInternalServerError, "Error creating item: "+err.Error())
 		return
 	}
-	log.Printf("query result: %s", result)
 
 	SendJsonResponse(w, http.StatusCreated, item)
 }
@@ -146,6 +160,15 @@ func GetItemById(w http.ResponseWriter, r *http.Request) {
 // TODO edit your shitty sql builder !
 
 func UpdateItem(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userDetails, ok := ctx.Value(userContextKey).(UserDetails)
+	if !ok {
+		SendCustomeErrorResponse(w, http.StatusUnauthorized, "You are not Authorized to do this action")
+		return
+	}
+
+	user := userDetails.UserData
+
 	var item model.Item
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
@@ -163,6 +186,26 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 	if err := db.Get(&item, query, args...); err != nil {
 		HandelError(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	hasRole := false
+	for _, role := range userDetails.UserRoles {
+		if role == "admin" {
+			hasRole = true
+			break
+		}
+	}
+
+	if !hasRole {
+		exist, err := RowExists("vendor_admins", map[string]interface{}{"vendor_id": item.Vendor_id.String(), "user_id": user.ID.String()})
+		if err != nil {
+			SendErrorResponse(w, err)
+			return
+		}
+		if !exist {
+			SendCustomeErrorResponse(w, http.StatusUnauthorized, "You are not Authorized to do this action")
+			return
+		}
 	}
 
 	if r.FormValue("name") != "" {
@@ -238,14 +281,47 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteItemById(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-
-	if !ValidUUID(id) {
-		HandelError(w, http.StatusBadRequest, "Invalid User Id")
+	ctx := r.Context()
+	userDetails, ok := ctx.Value(userContextKey).(UserDetails)
+	if !ok {
+		SendCustomeErrorResponse(w, http.StatusUnauthorized, "You are not Authorized to do this action")
+		return
 	}
 
-	query, args, err := statement.Delete("*").
-		From("items").
+	user := userDetails.UserData
+	hasRole := false
+	for _, role := range userDetails.UserRoles {
+		if role == "admin" {
+			hasRole = true
+			break
+		}
+	}
+
+	id := r.PathValue("id")
+	var item model.Item
+	err := ReadByID(&item, "items", item_columns, id)
+	if err != nil {
+		SendErrorResponse(w, err)
+		return
+	}
+
+	if !hasRole {
+		exist, err := RowExists("vendor_admins", map[string]interface{}{"vendor_id": item.Vendor_id.String(), "user_id": user.ID.String()})
+		if err != nil {
+			SendErrorResponse(w, err)
+			return
+		}
+		if !exist {
+			SendCustomeErrorResponse(w, http.StatusUnauthorized, "You are not Authorized to do this action")
+			return
+		}
+	}
+
+	if !ValidUUID(id) {
+		HandelError(w, http.StatusBadRequest, "Invalid item Id")
+	}
+
+	query, args, err := statement.Delete("items").
 		Where("id = ?", id).
 		ToSql()
 	if err != nil {

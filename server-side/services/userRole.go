@@ -25,11 +25,20 @@ func GrantRole(w http.ResponseWriter, r *http.Request) {
 	user_id, err := uuid.Parse(userId)
 	if err != nil {
 		HandelError(w, http.StatusBadRequest, "Invalid UUID format")
-		log.Fatal(err)
+		log.Println(err)
 		return
 	}
 
 	role_id, err := strconv.Atoi(roleId)
+	exist, err := RowExists("user_roles", map[string]interface{}{"user_id": userId, "role_id": role_id})
+	if err != nil {
+		SendErrorResponse(w, err)
+		return
+	}
+	if exist {
+		SendErrorResponse(w, ErrConflict)
+		return
+	}
 
 	query, args, err := statement.
 		Insert("user_roles").
@@ -45,7 +54,7 @@ func GrantRole(w http.ResponseWriter, r *http.Request) {
 	result, err := db.Exec(query, args...)
 	if err != nil {
 		SendCustomeErrorResponse(w, http.StatusInternalServerError, "Error while excuting query")
-		log.Fatal(err)
+		log.Println(err)
 		return
 	}
 

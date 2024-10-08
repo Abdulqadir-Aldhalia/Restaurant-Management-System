@@ -27,6 +27,7 @@ func Controllers() {
 	r.Route("/", func(sub *michi.Router) {
 		sub.HandleFunc("POST signup", services.SignUpNewUser)
 		sub.HandleFunc("POST signin", services.SignIn)
+		sub.HandleFunc("POST vendorSignin", services.VendorSignin)
 		sub.HandleFunc("POST adminSignin", services.AdminSignin)
 
 		sub.With(services.AuthenticateJWT).Group(func(auth *michi.Router) {
@@ -59,6 +60,7 @@ func handleUserRoutes(sub *michi.Router) {
 	sub.HandleFunc("GET users", services.GetUsers)
 	sub.HandleFunc("GET users/{id}", services.GetUserById)
 	sub.HandleFunc("PUT users/{id}", services.UpdateUser)
+	sub.HandleFunc("GET me/user", services.GetUserData)
 
 	// vendors
 	sub.HandleFunc("GET vendors", services.GetVendors)
@@ -123,6 +125,7 @@ func handleAdminRoutes(sub *michi.Router) {
 }
 
 func handelItemVendorRoutes(sub *michi.Router) {
+	sub.HandleFunc("GET me/vendors", services.GetUserVendors)
 	sub.HandleFunc("POST items", services.CreateNewItem)
 	sub.HandleFunc("PUT items/{id}", services.UpdateItem)
 	sub.HandleFunc("DELETE items/{id}", services.DeleteItemById)

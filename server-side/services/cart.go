@@ -133,6 +133,12 @@ func AddItemToCart(w http.ResponseWriter, r *http.Request) {
 
 	user := userDetails.UserData
 
+	exist, err := RowExists("tables", map[string]interface{}{"customer_id": user.ID.String()})
+	if !exist {
+		SendErrorResponse(w, ErrConflict)
+		return
+	}
+
 	item_id, err := uuid.Parse(r.FormValue("item_id"))
 	if err != nil {
 		SendErrorResponse(w, err)
@@ -170,7 +176,7 @@ func AddItemToCart(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	exist, err := RowExists("cart_items", map[string]interface{}{"cart_id": user.ID.String(), "item_id": item_id.String()})
+	exist, err = RowExists("cart_items", map[string]interface{}{"cart_id": user.ID.String(), "item_id": item_id.String()})
 	if exist {
 		SendErrorResponse(w, ErrConflict)
 		return

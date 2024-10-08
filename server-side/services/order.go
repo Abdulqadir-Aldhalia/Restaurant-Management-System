@@ -167,9 +167,27 @@ func GetVendorOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var orders []model.Orders
-	query := fmt.Sprintf("SELECT * FROM orders WHERE vendor_id = '%s' AND  (status = '%s' OR status = '%s')", vendor_id, model.PENDING, model.PREPARING)
-	err = db.Select(&orders, query)
+	type OrderResult struct {
+		OrderID        uuid.UUID `db:"order_id" json:"order_id"`
+		TableName      string    `db:"table_name" json:"table_name"`
+		Status         string    `db:"status" json:"status"`
+		TotalOrderCost float64   `db:"total_order_cost" json:"total_order_cost"`
+		OrderNumber    int       `db:"order_number" json:"order_number"`
+	}
+	var result []OrderResult
+	query := fmt.Sprintf(`
+    SELECT 
+        orders.id AS order_id, 
+        tables.name AS table_name, 
+        status, 
+        total_order_cost, 
+        ROW_NUMBER() OVER (ORDER BY orders.created_at) AS order_number 
+    FROM orders 
+    JOIN tables ON orders.customer_id = tables.customer_id 
+    WHERE orders.vendor_id = '%s' 
+      AND (orders.status = '%s' OR orders.status = '%s')
+`, vendor_id, model.PENDING, model.PREPARING)
+	err = db.Select(&result, query)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("No Rows found")
@@ -182,7 +200,7 @@ func GetVendorOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SendJsonResponse(w, http.StatusOK, orders)
+	SendJsonResponse(w, http.StatusOK, result)
 }
 
 func GetOrderItems(w http.ResponseWriter, r *http.Request) {
@@ -283,6 +301,7 @@ func UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	vendor_id := r.FormValue("vendor_id")
 	_, err := uuid.Parse(vendor_id)
 	if err != nil {
+		log.Println("vendor_id = ", vendor_id)
 		SendCustomeErrorResponse(w, http.StatusBadRequest, "Not a valid vendor_id")
 		return
 	}
@@ -327,7 +346,15 @@ func UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status := r.FormValue("status")
-	if status != string(model.READY) && status != string(model.PREPARING) {
+	log.Println("comming status -> ", status)
+	switch status {
+	case "1":
+		status = string(model.PENDING)
+	case "2":
+		status = string(model.PREPARING)
+	case "3":
+		status = string(model.READY)
+	default:
 		status = string(model.PENDING)
 	}
 

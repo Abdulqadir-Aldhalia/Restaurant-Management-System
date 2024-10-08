@@ -20,6 +20,7 @@ import "./userManagement.css";
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -33,6 +34,7 @@ function UserManagement() {
     pageSize: 10,
     total: 0,
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const userToken = useSelector((state) => state.user.userToken);
   const dispatch = useDispatch();
@@ -53,7 +55,7 @@ function UserManagement() {
       if (error.response && error.response.status === 401) {
         message.error("Session expired. Please login again.");
         dispatch({ type: "LOGOUT" });
-        navigate("/login");
+        navigate("/loginAdminPortal");
       }
       return Promise.reject(error);
     },
@@ -66,6 +68,7 @@ function UserManagement() {
         `/users?page=${page}&per_page=${pagination.pageSize}`,
       );
       setUsers(response.data.data);
+      setFilteredUsers(response.data.data);
       setPagination((prev) => ({
         ...prev,
         current: page,
@@ -82,6 +85,42 @@ function UserManagement() {
     loadInitialUsers(pagination.current);
   }, [api, pagination.current]);
 
+  const handleSearch = async (query) => {
+    if (!query) {
+      setSearchQuery("");
+      loadInitialUsers(pagination.current); // Reload all users if no query
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await api.get(`/users?query=${query}`);
+      setFilteredUsers(response.data.data || []);
+      setPagination((prev) => ({
+        ...prev,
+        total: response.data.meta.total_rows,
+        current: 1,
+      })); // Reset pagination
+    } catch (error) {
+      console.error("Error searching for users:", error);
+      alert("An error occurred while searching for users. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const debounce = (func, delay) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+  };
+
+  useEffect(() => {
+    const debouncedSearch = debounce(handleSearch, 300);
+    debouncedSearch(searchQuery);
+  }, [searchQuery]);
+
   const handleAddUser = async (values) => {
     setLoadingAction(true);
     try {
@@ -93,23 +132,23 @@ function UserManagement() {
       if (imageFile) {
         formData.append("img", imageFile);
       }
-      const response = await api.post("/signup", formData, {
+      await api.post("/signup", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       message.success("User added successfully");
       form.resetFields();
-      setImageUrl("");
-      setImageFile(null);
-      loadInitialUsers(pagination.current); // Reload users after adding
+      loadInitialUsers(pagination.current);
     } catch (error) {
       if (error.response && error.response.status === 409) {
         message.error("Email already exists, please use a different email");
-      } else {
-        message.error("Failed to add user");
+      } else if (error.response && error.response.status == 400) {
+        message.error(error.response.data.error);
       }
     } finally {
       setLoadingAction(false);
       setIsModalVisible(false);
+      setImageUrl("");
+      setImageFile(null);
     }
   };
 
@@ -121,19 +160,14 @@ function UserManagement() {
       formData.append("email", values.email);
       formData.append("phone", values.phone);
       formData.append("password", values.password);
-
-      // Append the image file if a new one is selected
       if (imageFile) {
         formData.append("img", imageFile);
       }
-
-      // Update the user data in the backend
       await api.put(`/users/${editingUser.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
       message.success("User updated successfully");
-      loadInitialUsers(pagination.current); // Reload users after editing
+      loadInitialUsers(pagination.current);
     } catch (error) {
       if (error.response && error.response.status === 409) {
         message.error("Email already exists, please use a different email");
@@ -145,8 +179,8 @@ function UserManagement() {
       setIsModalVisible(false);
       setEditingUser(null);
       form.resetFields();
-      setImageUrl(""); // Reset image URL
-      setImageFile(null); // Reset image file
+      setImageUrl("");
+      setImageFile(null);
     }
   };
 
@@ -166,8 +200,9 @@ function UserManagement() {
   const handleDeleteUser = async (userId) => {
     try {
       await api.delete(`/users/${userId}`);
+      // setUsers((prev) => prev.filter((user) => user.id !== userId));
       message.success("User deleted successfully");
-      loadInitialUsers(pagination.current); // Reload users after deletion
+      loadInitialUsers(pagination.current);
     } catch (error) {
       message.error("Failed to delete user");
     }
@@ -193,11 +228,25 @@ function UserManagement() {
 
   return (
     <div>
+      <Input
+        placeholder="Search by name or email"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        style={{ margin: "20px" }}
+      />
+      <Button
+        type="primary"
+        icon={<PlusOutlined />}
+        onClick={showAddUserModal}
+        style={{ margin: "20px" }}
+      >
+        Add User
+      </Button>
       {loading ? (
         <Spin tip="Loading..." />
       ) : (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-          {users.map((user) => {
+          {filteredUsers.map((user) => {
             const userImageUrl = `${baseUrl}${user.img}`;
             return (
               <Card
@@ -227,32 +276,20 @@ function UserManagement() {
                 ]}
               >
                 <Card.Meta title={user.name} description={user.email} />
-                <p>Phone: {user.phone}</p>
               </Card>
             );
           })}
         </div>
       )}
-
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={showAddUserModal}
-        style={{ marginTop: "20px" }}
-      >
-        Add User
-      </Button>
-
       <Pagination
         current={pagination.current}
         pageSize={pagination.pageSize}
         total={pagination.total}
         onChange={handlePageChange}
-        style={{ marginTop: "20px", textAlign: "center" }}
+        style={{ marginTop: 20 }}
       />
-
       <Modal
-        title={editingUser ? "Edit User" : "Add User"}
+        title={isAddingUser ? "Add User" : "Edit User"}
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
@@ -260,61 +297,50 @@ function UserManagement() {
         <Form
           form={form}
           onFinish={isAddingUser ? handleAddUser : handleSaveUser}
-          layout="vertical"
         >
-          <Form.Item
-            name="name"
-            label="Name"
-            rules={[{ required: true, message: "Please enter name" }]}
-          >
+          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-
           <Form.Item
             name="email"
             label="Email"
-            rules={[{ required: true, message: "Please enter email" }]}
+            rules={[{ required: true, type: "email" }]}
           >
             <Input />
           </Form.Item>
-
-          <Form.Item
-            name="phone"
-            label="Phone"
-            rules={[{ required: true, message: "Please enter phone" }]}
-          >
+          <Form.Item name="phone" label="Phone" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-
           <Form.Item
             name="password"
             label="Password"
-            rules={[
-              { required: isAddingUser, message: "Please enter password" },
-            ]}
+            rules={[{ required: isAddingUser }]}
           >
             <Input.Password />
           </Form.Item>
-
-          <Form.Item label="Upload Image">
+          <Form.Item label="Profile Image">
             <Upload
-              name="image"
+              beforeUpload={() => false} // Prevent automatic upload
               showUploadList={false}
-              beforeUpload={() => false}
               onChange={handleImageUpload}
             >
-              <Button icon={<PlusOutlined />}>Upload Image</Button>
+              <Button>Upload Image</Button>
             </Upload>
-            {imageUrl ? (
-              <img src={imageUrl} alt="user" className="profile-image" />
-            ) : (
-              <p>No image uploaded</p>
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt="avatar"
+                style={{
+                  width: "100px",
+                  marginTop: "10px",
+                  marginLeft: "10px",
+                }}
+              />
             )}
           </Form.Item>
-
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loadingAction}>
-              Submit
+            <Button type="primary" loading={loadingAction} htmlType="submit">
+              {isAddingUser ? "Add" : "Save"}
             </Button>
           </Form.Item>
         </Form>

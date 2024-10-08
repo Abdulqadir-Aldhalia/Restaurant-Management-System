@@ -66,7 +66,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch existing user
 	query, args, err := statement.Select(user_columns...).
 		From("users").
 		Where("id = ?", id).
@@ -82,7 +81,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update user fields based on form input
 	if r.FormValue("name") != "" {
 		user.Name = r.FormValue("name")
 	}
@@ -134,7 +132,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		*user.Img = strings.TrimPrefix(*user.Img, Domain+"/")
 	}
 
-	// Prepare the update query
 	query, args, err = statement.
 		Update("users").
 		Set("img", user.Img).

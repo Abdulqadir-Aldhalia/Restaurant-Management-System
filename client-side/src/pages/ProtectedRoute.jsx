@@ -6,8 +6,10 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation();
 
   if (!userToken) {
-    if (location.pathname === "/adminDashboard") {
+    if (location.pathname.startsWith("/adminDashboard")) {
       return <Navigate to="/loginAdminPortal" />;
+    } else if (location.pathname.startsWith("/vendorApp")) {
+      return <Navigate to="/loginVendorPortal" />;
     }
     return <Navigate to="/login" />;
   }

@@ -1,0 +1,88 @@
+.vendor-items-container {
+  padding: 20px;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  height: 100vh;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.add-item-button {
+  display: block;
+  margin: 0 auto 20px;
+  background-color: #4caf50;
+  color: white;
+}
+
+.items-list {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.item-card {
+  width: 250px;
+  border-radius: 12px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.item-card:hover {
+  transform: scale(1.05);
+}
+
+.item-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.item-name {
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+.item-price {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.item-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+}
+
+.edit-button {
+  background-color: #1890ff;
+  color: white;
+}
+
+.delete-button {
+  color: white;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.profile-image-preview {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  margin-top: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

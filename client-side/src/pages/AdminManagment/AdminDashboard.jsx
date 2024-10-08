@@ -4,9 +4,11 @@ import {
   UserOutlined,
   ShopOutlined,
   PoweroffOutlined,
+  ApartmentOutlined,
 } from "@ant-design/icons";
 import UserManagement from "./UserManagement";
 import VendorManagement from "./VendorManagement";
+import RolesManagement from "./RolesManagement";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeUserToken } from "../../redux/user/userSlice";
@@ -60,6 +62,9 @@ function AdminDashboard() {
           <Menu.Item key="vendors" icon={<ShopOutlined />}>
             Vendors
           </Menu.Item>
+          <Menu.Item key="roles" icon={<ApartmentOutlined />}>
+            Roles
+          </Menu.Item>
         </Menu>
       </Sider>
       <Layout>
@@ -99,6 +104,7 @@ function AdminDashboard() {
         >
           {currentView === "users" && <UserManagement />}
           {currentView === "vendors" && <VendorManagement />}
+          {currentView === "roles" && <RolesManagement />}
         </Content>
       </Layout>
     </Layout>

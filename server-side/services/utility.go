@@ -41,7 +41,6 @@ func HandelError(w http.ResponseWriter, status int, message string) {
 }
 
 func GetRootpath(dir string) string {
-	// Get current working directory
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Println(err)
@@ -49,16 +48,13 @@ func GetRootpath(dir string) string {
 	return filepath.Join(cwd, dir)
 }
 
-// SaveImageFile saves the uploaded image file to a specified directory with a new name
 func SaveImageFile(file io.Reader, table string, filename string) (string, error) {
-	// Create directory structure if it doesn't exist
 	fullPath := filepath.Join("uploads", table)
 	fmt.Printf(" filePath of the saving image  => %s \n", fullPath)
 	if err := os.MkdirAll(fullPath, os.ModePerm); err != nil {
 		return "", err
 	}
 
-	// Generate new filename
 	randomNumber := rand.Intn(1000)
 	timestamp := time.Now().Unix()
 	ext := filepath.Ext(filename)
@@ -68,8 +64,6 @@ func SaveImageFile(file io.Reader, table string, filename string) (string, error
 
 	newFileName := fmt.Sprintf("%s_%d_%d%s", filepath.Base(table), timestamp, randomNumber, ext)
 	newFilePath := filepath.Join(fullPath, newFileName)
-
-	// Save the file
 	destFile, err := os.Create(newFilePath)
 	if err != nil {
 		return "", err

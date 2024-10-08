@@ -114,6 +114,16 @@ func AssignAdminToVendor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	exist, err := RowExists("vendor_admins", map[string]interface{}{"user_id": userId, "vendor_id": vendorId})
+	if exist {
+		SendErrorResponse(w, ErrConflict)
+		return
+	}
+	if err != nil {
+		SendErrorResponse(w, err)
+		return
+	}
+
 	query, args, err := statement.
 		Insert("vendor_admins").
 		Columns(vendorAdmins_columns...).

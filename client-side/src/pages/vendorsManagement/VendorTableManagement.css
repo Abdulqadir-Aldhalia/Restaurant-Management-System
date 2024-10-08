@@ -1,0 +1,87 @@
+.vendor-tables-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.add-table-button {
+  margin-bottom: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tables-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.table-card {
+  width: 300px;
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease;
+}
+
+.table-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.table-available {
+  background-color: #e6ffed;
+}
+
+.table-unavailable {
+  background-color: #ffe6e6;
+}
+
+.table-name {
+  font-size: 20px;
+}
+
+.table-availability,
+.table-service {
+  margin: 10px 0;
+}
+
+.yes {
+  color: green;
+}
+
+.no {
+  color: red;
+}
+
+.table-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.ant-modal {
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.ant-form-item {
+  margin-bottom: 16px;
+}
+
+.add-button,
+.edit-button,
+.delete-button,
+.empty-button {
+  border-radius: 4px;
+}

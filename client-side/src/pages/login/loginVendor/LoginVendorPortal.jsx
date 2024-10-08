@@ -7,9 +7,9 @@ import Button from "../../../components/button/Button.jsx";
 import Input from "../../../components/input/Input.jsx";
 import Container from "../../../components/container/Container.jsx";
 import { baseUrl } from "../../../const.js";
-import "./login.css";
+import "./loginVendorPortal.css";
 
-const Login = () => {
+const LoginVendorPortal = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
@@ -20,7 +20,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrors({}); // Clear previous errors
+    setErrors({});
     let formErrors = {};
 
     const trimmedEmail = email.trim();
@@ -34,8 +34,6 @@ const Login = () => {
       formErrors.password = "Password is required";
     }
 
-    console.log(trimmedPassword + " " + trimmedEmail);
-
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       setLoading(false);
@@ -44,13 +42,13 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        `${baseUrl}/signin?username=${encodeURIComponent(trimmedEmail)}&password=${encodeURIComponent(trimmedPassword)}`,
+        `${baseUrl}/vendorSignin?username=${encodeURIComponent(trimmedEmail)}&password=${encodeURIComponent(trimmedPassword)}`,
         {},
       );
       if (response.status === 200) {
         dispatch(setUserToken(response.data.token));
         localStorage.setItem("token", response.data.token);
-        navigate("/userHome");
+        navigate("/vendorApp");
       } else if (response.data.message) {
         console.log("Login message:", response.data.message);
       } else {
@@ -66,7 +64,6 @@ const Login = () => {
           general: error.response.data.message ?? error.response.data.error,
         });
       } else {
-        // General error message for other cases
         setErrors({
           general: "Oops! Something went wrong. Please try again later.",
         });
@@ -79,8 +76,8 @@ const Login = () => {
 
   return (
     <Container>
-      <div className="welcome-message">
-        <h2>Welcome</h2>
+      <div className="welcome-message-2">
+        <h2>Vendor Portal</h2>
         <p>Please login to continue</p>
       </div>
 
@@ -109,15 +106,9 @@ const Login = () => {
           title={loading ? "Logging in..." : "Login"}
           disabled={loading}
         />
-
-        <div className="register-option">
-          <span>
-            Don't have an account? <a href="/register">Create one here</a>
-          </span>
-        </div>
       </form>
     </Container>
   );
 };
 
-export default Login;
+export default LoginVendorPortal;

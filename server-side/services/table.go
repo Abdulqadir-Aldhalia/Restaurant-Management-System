@@ -141,7 +141,6 @@ func GetTableById(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReserveTable(w http.ResponseWriter, r *http.Request) {
-	var table model.Tables
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		SendCustomeErrorResponse(w, http.StatusBadRequest, "Invalid table ID")
@@ -166,12 +165,18 @@ func ReserveTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !userTable[0].Is_available {
-		SendErrorResponse(w, ErrConflict)
+	if len(userTable) != 0 {
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Table is not empty")
 		return
 	}
 
-	query, args, err := statement.Select(strings.Join(table_columns, ", ")).
+	// if !userTable[0].Is_available {
+	// 	SendErrorResponse(w, ErrConflict)
+	// 	return
+	// }
+
+	var table model.Tables
+	query, args, err := statement.Select(strings.Join(table_columns, ",")).
 		From("tables").
 		Where("id = ?", id).
 		ToSql()
@@ -186,6 +191,12 @@ func ReserveTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = ReadByColumns(&userTable, "tables", table_columns, searchedColumns)
+	if err != nil {
+		SendErrorResponse(w, err)
+		return
+	}
+
 	if !table.Is_available {
 		log.Println("Table is not avaliable")
 		HandelError(w, http.StatusConflict, "Table is not available")
@@ -194,7 +205,7 @@ func ReserveTable(w http.ResponseWriter, r *http.Request) {
 
 	query, args, err = statement.Select(strings.Join(user_columns, ", ")).
 		From("users").
-		Where("id = ?", customer_id).
+		Where("id = ?", customer_id.String()).
 		ToSql()
 	if err != nil {
 		log.Println("Error building user query -> ", err)

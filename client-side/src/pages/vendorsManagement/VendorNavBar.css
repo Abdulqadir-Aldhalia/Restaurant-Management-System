@@ -1,0 +1,118 @@
+/* General navbar styling */
+.navbar {
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+}
+
+.nav-container {
+  padding: 10px;
+  width: 80%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo styling */
+.logo {
+  margin: 20px;
+  margin-left: 30px;
+  color: #333; /* Changed to dark grey for better contrast */
+  font-size: 2rem;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* Flexbox for aligning nav-links */
+.nav-links {
+  display: flex;
+  gap: 30px;
+}
+
+/* Nav link styling */
+.nav-link {
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: 500;
+  position: relative;
+  color: #333;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.nav-link:hover {
+  text-decoration: none;
+  color: #e63946;
+  transform: translateY(-2px);
+}
+
+.nav-link::after {
+  text-decoration: none;
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 2px;
+  background-color: #e63946;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Button styles */
+.custom-button-primary {
+  padding: 10px 20px;
+  background-color: #fff;
+  color: #3498db;
+  border: 2px solid #3498db;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* Spacing between icon and text */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.custom-button-primary:hover {
+  background-color: #3498db; /* Primary blue color */
+  color: white;
+  border-color: #3498db;
+  transform: translateY(-2px);
+}
+
+.custom-button-danger {
+  padding: 10px 20px;
+  background-color: #fff;
+  color: #e63946;
+  border: 2px solid #e63946;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* Spacing between icon and text */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.custom-button-danger:hover {
+  background-color: #e63946; /* Danger red color */
+  color: white;
+  border-color: #e63946;
+  transform: translateY(-2px);
+}

@@ -9,7 +9,6 @@ import {
   Form,
   Popconfirm,
   Spin,
-  Switch,
   Pagination,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
@@ -28,11 +27,10 @@ function VendorManagement() {
   const [imageFile, setImageFile] = useState(null);
   const [form] = Form.useForm();
   const [isAddingVendor, setIsAddingVendor] = useState(false);
-
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalVendors, setTotalVendors] = useState(0);
-  const [vendorsPerPage] = useState(10); // Change this to your desired items per page
+  const [vendorsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
 
   const userToken = useSelector((state) => state.user.userToken);
   const dispatch = useDispatch();
@@ -51,7 +49,7 @@ function VendorManagement() {
       if (error.response && error.response.status === 401) {
         message.error("Session expired. Please login again.");
         dispatch({ type: "LOGOUT" });
-        navigate("/login");
+        navigate("/adminLoginPortal");
       } else if (error.response.status === 403) {
         message.error("Unauthorized to perform this action.");
       }
@@ -61,21 +59,22 @@ function VendorManagement() {
 
   useEffect(() => {
     const fetchVendors = async () => {
+      setLoading(true); // Ensure loading is true when fetching
       try {
         const response = await api.get(
-          `/vendors?page=${currentPage}&limit=${vendorsPerPage}`,
+          `/vendors?page=${currentPage}&limit=${vendorsPerPage}&query=${searchQuery}`, // Include search query
         );
         setVendors(response.data.data); // Adjusted to match the new API response
         setTotalVendors(response.data.total); // Assuming total vendors count comes in the response
-        setLoading(false);
       } catch (error) {
         message.error("Failed to load vendors");
-        setLoading(false);
+      } finally {
+        setLoading(false); // Set loading to false after fetching
       }
     };
 
     fetchVendors();
-  }, [userToken, currentPage]); // Fetch vendors when currentPage changes
+  }, [userToken, currentPage, searchQuery]); // Fetch vendors when currentPage or searchQuery changes
 
   const handleAddVendor = async (values) => {
     setLoadingAction(true);
@@ -176,6 +175,19 @@ function VendorManagement() {
 
   return (
     <div>
+      <Input
+        placeholder="Search by name"
+        onChange={(e) => setSearchQuery(e.target.value)} // Update search query
+        style={{ marginBottom: "20px", width: "300px" }}
+      />
+      <Button
+        type="primary"
+        icon={<PlusOutlined />}
+        onClick={showAddVendorModal}
+        style={{ margin: "20px" }}
+      >
+        Add Vendor
+      </Button>
       {loading ? (
         <Spin tip="Loading..." />
       ) : (
@@ -215,13 +227,6 @@ function VendorManagement() {
               </Card>
             );
           })}
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={showAddVendorModal}
-          >
-            Add Vendor
-          </Button>
         </div>
       )}
       <Pagination
@@ -260,12 +265,12 @@ function VendorManagement() {
               },
             ]}
           >
-            <Input.TextArea />
+            <Input />
           </Form.Item>
           <Form.Item label="Image">
             <Upload
-              accept="image/*"
               beforeUpload={() => false} // Prevent automatic upload
+              showUploadList={false}
               onChange={handleImageUpload}
             >
               <Button>Upload Image</Button>
@@ -274,13 +279,13 @@ function VendorManagement() {
               <img
                 src={imageUrl}
                 alt="Vendor"
-                style={{ width: "100px", marginTop: "10px" }}
+                style={{ width: 100, marginTop: 10, marginLeft: 10 }}
               />
             )}
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loadingAction}>
-              {isAddingVendor ? "Add Vendor" : "Save Vendor"}
+              Submit
             </Button>
           </Form.Item>
         </Form>

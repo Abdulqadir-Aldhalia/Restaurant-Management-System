@@ -57,11 +57,11 @@ const LoginAdminGateway = () => {
     } catch (error) {
       if (error.response?.status === 400) {
         setErrors({
-          general: error.response.data.error,
+          general: error.response.data.message ?? error.response.data.error,
         });
       } else if (error.response?.status === 404) {
         setErrors({
-          general: error.response.data.error,
+          general: error.response.data.message ?? error.response.data.error,
         });
       } else {
         setErrors({
