@@ -1,0 +1,65 @@
+[package]
+name = "esp32-101"
+version = "0.1.0"
+authors = ["Abdulqadir <azabdo12345@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+# Backtrace and panic handler
+esp-backtrace = { version = "0.14.2", features = ["esp32", "exception-handler", "panic-handler", "println"] }
+
+# Hardware Abstraction Layer for ESP32
+esp-hal = { version = "0.19.0", features = ["esp32"] }  # Downgraded to match dependencies
+
+# Logging and println
+esp-println = { version = "0.12.0", features = ["esp32", "log"] }
+log = "0.4.22"
+
+# Memory allocator
+esp-alloc = "0.5.0"
+
+# Wi-Fi handling for ESP32
+esp-wifi = { version = "0.10.1", features = ["esp32"] }
+
+# Embedded IO traits
+embedded-io = "0.6.1"
+
+# Efficient heapless collections
+heapless = { version = "0.8.0", default-features = false }
+
+# Networking (smoltcp)
+smoltcp = { version = "0.11.0", default-features = false, features = ["medium-ethernet", "proto-dhcpv4", "proto-igmp", "proto-ipv4", "socket-dhcpv4", "socket-icmp", "socket-raw", "socket-tcp", "socket-udp"] }
+
+# HTTP client for embedded systems
+ureq = "2.6.1"
+
+# Optional for error handling
+anyhow = "1.0"
+
+# Networking abstractions
+embedded-nal = "0.9.0"
+
+# Embedded services
+embedded-svc = { version = "0.28.0" }
+
+# ESP-IDF services
+esp-idf-svc = "0.39.2"
+
+# Match the specific version needed
+esp-idf-sys = { version = "0.35.0", features = ["binstart"] }  # Updated to a compatible version
+
+# Specific version of embedded-hal
+embedded-hal = { version = "1.0.0" }  # Changed to match esp-hal requirements
+
+[profile.dev]
+opt-level = "s"
+
+[profile.release]
+codegen-units = 1
+debug = 2
+debug-assertions = false
+incremental = false
+lto = 'fat'
+opt-level = 's'
+overflow-checks = false

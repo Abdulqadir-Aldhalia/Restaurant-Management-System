@@ -1,0 +1,31 @@
+[package]
+name = "embedded_rust"
+version = "0.1.0"
+authors = ["Abdulqadir <azabdo12345@gmail.com>"]
+edition = "2021"
+resolver = "2"
+rust-version = "1.81"
+
+[profile.release]
+opt-level = "s"
+
+[profile.dev]
+debug = true
+opt-level = "z"
+
+[features]
+default = ["hal", "esp-idf-sys/native"]
+
+pio = ["esp-idf-sys/pio"]
+hal = ["esp-idf-hal", "embedded-svc", "esp-idf-svc"]
+
+[dependencies]
+anyhow = "1.0.75"
+log = { version = "0.4.17", default-features = false }
+esp-idf-sys = { version = "0.33", default-features = false }
+esp-idf-hal = { version = "0.41", optional = true, default-features = false }
+esp-idf-svc = { version = "0.46", optional = true, default-features = false }
+embedded-svc = { version = "0.25", optional = true, default-features = false }
+
+[build-dependencies]
+embuild = { version = "0.32.0", features = ["espidf"] }

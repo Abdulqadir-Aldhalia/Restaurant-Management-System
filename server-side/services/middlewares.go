@@ -167,6 +167,18 @@ func AuthenticateJWT(next http.Handler) http.Handler {
 	})
 }
 
+// this one is for Embedded Rust !
+func AuthenticateAPIKey(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiKey := r.Header.Get("X-API-Key")
+		if apiKey == "" || apiKey != "[Q<-(C*V{u/AJim+<qwJ0|~Jus{u',pYJ]vEflDl~sb5LiLx2JA}F,.&cJB'a{u" {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")

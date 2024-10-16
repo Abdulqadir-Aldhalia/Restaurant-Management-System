@@ -45,6 +45,9 @@ func Controllers() {
 			handleVendorAdminRoutes(vendor)
 			handelItemVendorRoutes(vendor)
 		})
+		sub.With(services.AuthenticateAPIKey).Group(func(embedded *michi.Router) {
+			handleEmbeddedRoutes(embedded) // Define routes for embedded devices
+		})
 	})
 
 	log.Printf("Starting server on port %s", serverPort)
@@ -53,6 +56,10 @@ func Controllers() {
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
+}
+
+func handleEmbeddedRoutes(embedded *michi.Router) {
+	embedded.HandleFunc("POST /embeddeSystem/notify", services.NotifyServer)
 }
 
 func handleUserRoutes(sub *michi.Router) {
@@ -99,6 +106,7 @@ func handleVendorRoutes(sub *michi.Router) {
 
 	// tables
 	sub.HandleFunc("DELETE tables/{id}/empty", services.EmptyTheTable)
+	sub.HandleFunc("DELETE tables/{id}", services.DeleteTable)
 }
 
 func handleRoleRoutes(sub *michi.Router) {

@@ -31,6 +31,35 @@ func CreateCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	searchColumns := map[string]interface{}{
+		"customer_id": user.ID,
+	}
+
+	var tables []model.Tables
+
+	err = ReadByColumns(&tables, "tables", table_columns, searchColumns)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			SendCustomeErrorResponse(w, http.StatusBadRequest, "You need to reserve a table first")
+			return
+
+		}
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "Oops, something went wrong !")
+		return
+	}
+
+	if len(tables) <= 0 {
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "You need to reserve a table first")
+		return
+	}
+
+	table := tables[0]
+
+	if table.Customer_id != user.ID {
+		SendCustomeErrorResponse(w, http.StatusBadRequest, "You need to reserve a table first")
+		return
+	}
+
 	tx, err := db.Beginx()
 	if err != nil {
 		SendErrorResponse(w, err)
@@ -47,24 +76,6 @@ func CreateCart(w http.ResponseWriter, r *http.Request) {
 			err = tx.Commit()
 		}
 	}()
-	searchColumns := map[string]interface{}{
-		"customer_id": user.ID,
-	}
-
-	var tables []model.Tables
-
-	err = ReadByColumns(&tables, "tables", table_columns, searchColumns)
-	if err != nil {
-		SendErrorResponse(w, err)
-		return
-	}
-
-	table := tables[0]
-
-	if table.Customer_id != user.ID {
-		SendCustomeErrorResponse(w, http.StatusBadRequest, "You need to reserve a table first")
-		return
-	}
 
 	data := map[string]interface{}{
 		"id":        user.ID,

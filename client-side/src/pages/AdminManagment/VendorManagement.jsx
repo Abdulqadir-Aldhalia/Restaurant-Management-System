@@ -64,7 +64,7 @@ function VendorManagement() {
         const response = await api.get(
           `/vendors?page=${currentPage}&limit=${vendorsPerPage}&query=${searchQuery}`, // Include search query
         );
-        setVendors(response.data.data); // Adjusted to match the new API response
+        setVendors(response.data.data || []); // Adjusted to match the new API response
         setTotalVendors(response.data.total); // Assuming total vendors count comes in the response
       } catch (error) {
         message.error("Failed to load vendors");

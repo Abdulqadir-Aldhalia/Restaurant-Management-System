@@ -42,7 +42,7 @@ const VendorOrderManagement = () => {
     setLoading(true);
     try {
       const response = await api.get(`/orders/vendors/${vendorId}`);
-      setOrders(response.data);
+      setOrders(response.data || []);
       message.success("Orders loaded successfully");
     } catch (error) {
       message.error("Failed to load orders");
