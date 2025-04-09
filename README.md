@@ -1,135 +1,114 @@
 # Restaurant Management System
 
-Welcome to the Restaurant Management System repository! This project aims to develop a comprehensive solution to streamline restaurant operations and enhance the customer experience.
+Welcome to the Restaurant Management System repository! This open-source project provides a full-stack solution to manage restaurant operations efficiently and enhance the overall customer experience.
 
-## Project Overview
+## 🌟 Project Overview
 
-The Restaurant Management System is designed to manage various aspects of restaurant operations, including:
+This system manages various aspects of a restaurant business:
 
-- **Menu Management**: Create, update, and organize menu items with ease.
-- **Order Processing**: Efficiently handle customer orders from placement to fulfillment.
-- **Reservation System**: Manage table reservations to optimize seating and reduce wait times.
-- **Customer Feedback**: Collect and analyze customer reviews to improve service quality.
+- **Menu Management**: Easily add, update, and organize menu items.
+- **Order Processing**: Streamline the order placement and tracking process.
+- **Reservation System**: Optimize table usage and reduce wait times.
+- **Customer Feedback**: Collect insights to improve service quality.
 
-## How the Project Works
+## 🧠 How the System Works
 
-The system is structured to cater to different user roles, each with specific functionalities:
+The system serves different types of users with unique roles:
 
-- **System Administrator Portal**: Allows system-wide configurations, user management, and access control.
-- **Restaurant Administrator Portal**: Enables restaurant managers to oversee daily operations, including menu updates, order tracking, and reservation management.
-- **Customer Interface**: Provides customers with an intuitive platform to view menus, place orders, make reservations, and provide feedback.
+- 🛠 **System Administrator Portal**: Handles global settings, access control, and user roles.
+- 🧑‍🍳 **Restaurant Administrator Portal**: Manages restaurant-specific settings, menu, orders, and tables.
+- 🍽 **Customer Interface** (In Progress): Allows customers to explore the restaurant, make reservations, and place orders.
+- 📱 **Mobile App**:
+  - ✅ View restaurants and menu items.
+  - 🚧 Placing orders and sending data is still under development.
 
-## Project Status
+## ✅ Project Status
 
-- ✅ **Backend (Go)**: Completed
-- ✅ **Rust Components**: Completed
-- ✅ **Frontend - Admin Portals (JavaScript, HTML, CSS)**: Completed
-- 🚧 **Frontend - Customer Interface**: In Progress
-- 🚧 **Mobile Application (Dart)**: In Progress
-  - **Implemented**: Basic structure allowing viewing of restaurants and their menu items.
-  - **Pending**: Functionality for placing orders and sending data.
+| Component                     | Status         |
+|------------------------------|----------------|
+| Backend (Go)                 | ✅ Completed    |
+| Rust Components              | ✅ Completed    |
+| Frontend - Admin Portals     | ✅ Completed    |
+| Frontend - Customer UI       | 🚧 In Progress  |
+| Mobile App (Flutter/Dart)    | 🚧 Partial (UI only) |
 
-## Technologies Used
-
-This project utilizes a diverse tech stack to ensure robust performance and scalability:
+## 🛠 Technologies Used
 
 - **Frontend**: JavaScript, HTML, CSS
-- **Backend**: Go, Rust
-- **Mobile Application**: Dart
+- **Backend**: Go, Rust (performance-critical)
+- **Mobile**: Dart & Flutter
 
-## Repository Structure
+## 📁 Repository Structure
 
-The repository is organized into the following directories:
+```bash
+restaurant-management-system/
+├── client-side/        # Frontend code (Admin UI)
+├── server-side/        # Backend services (Go)
+├── rust/               # Performance modules (Rust)
+└── mobile/             # Mobile app (Flutter)
+```
 
-- **client-side/**
-  - Contains the frontend codebase built with JavaScript, HTML, and CSS.
-- **server-side/**
-  - Houses the backend services developed using Go.
-- **mobile/**
-  - Includes the mobile application source code written in Dart.
-- **rust/**
-  - Features components of the backend implemented in Rust for performance-critical tasks.
+## 🚀 Getting Started
 
-## Getting Started
+Clone the repository from GitHub and set up each part:
 
-To set up the project locally, follow these steps:
+```bash
+git clone https://github.com/Abdulqadir-Aldhalia/Sadeem-Restaurant.git
+cd Sadeem-Restaurant
+```
 
-1. **Clone the Repository**:
+### Install Dependencies
 
+#### Frontend (Admin Interface)
+
+```bash
+cd client-side
+npm install
+npm start
+```
+
+#### Backend (Go)
+
+```bash
+cd ../server-side
+go get ./...
+go run main.go
+```
+
+#### Mobile (Flutter)
+
+```bash
+cd ../mobile
+flutter pub get
+flutter run
+```
+
+## 🤝 Contributing
+
+We welcome your contributions!
+
+1. **Fork** the project.
+2. Create a new branch:
    ```bash
-   git clone https://github.com/Abdulqadir-Aldhalia/Sadeem-Restaurant.git
+   git checkout -b feature/your-feature
    ```
-
-2. **Navigate to the Project Directory**:
-
+3. Make your changes and commit:
    ```bash
-   cd Sadeem-Restaurant
+   git commit -m "Add feature: ..."
    ```
-
-3. **Install Dependencies**:
-
-   - **Frontend**:
-     ```bash
-     cd client-side
-     npm install
-     ```
-   - **Backend**:
-     ```bash
-     cd server-side
-     go get ./...
-     ```
-   - **Mobile**:
-     ```bash
-     cd mobile
-     flutter pub get
-     ```
-
-4. **Run the Applications**:
-
-   - **Frontend**:
-     ```bash
-     npm start
-     ```
-   - **Backend**:
-     ```bash
-     go run main.go
-     ```
-   - **Mobile**:
-     ```bash
-     flutter run
-     ```
-
-## Contribution Guidelines
-
-We welcome contributions to enhance the Restaurant Management System. To contribute:
-
-1. **Fork the Repository**.
-2. **Create a New Branch**:
-
+4. Push to your branch:
    ```bash
-   git checkout -b feature/YourFeatureName
+   git push origin feature/your-feature
    ```
+5. Open a **Pull Request** via GitHub.
 
-3. **Commit Your Changes**:
+Please make sure your changes follow our code standards and include relevant documentation or tests.
 
-   ```bash
-   git commit -m 'Add some feature'
-   ```
-
-4. **Push to the Branch**:
-
-   ```bash
-   git push origin feature/YourFeatureName
-   ```
-
-5. **Open a Pull Request**.
-
-Please ensure your code adheres to the project's coding standards and includes appropriate tests.
-
-## License
+## 📜 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
 ---
 
-Thank you for your interest in the Restaurant Management System project. For any inquiries or further information, please contact [Abdulqadir Aldhalia](mailto:Abdulqadir.Aldhalia@hotmail.com). 
+Thank you for checking out the **Restaurant Management System** project!  
+For inquiries or support, reach out to **[Abdulqadir Aldhalia](mailto:Abdulqadir.Aldhalia@hotmail.com)**.
